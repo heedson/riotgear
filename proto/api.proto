@@ -1,0 +1,19 @@
+syntax="proto3";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/heedson/riotgear/proto";
+
+service EchoTest {
+    rpc Echo(EchoRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/echo"
+            body: "*"
+        };
+    }
+}
+
+message EchoRequest {
+    string value = 1;
+}
