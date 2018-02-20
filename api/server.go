@@ -6,9 +6,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sirupsen/logrus"
+
+	"github.com/heedson/riotgear/proto"
 )
 
-//go:generate protoc -I../proto -I../vendor/github.com/googleapis/googleapis/ --go_out=plugins=grpc:$GOPATH/src --grpc-gateway_out=logtostderr=true:../proto/ --swagger_out=logtostderr=true:../proto/ ../proto/api.proto
+// Fix when dep isn't shit
+//go:generate protoc -I../proto -I../thirdparty/googleapis/ --go_out=plugins=grpc:$GOPATH/src --grpc-gateway_out=logtostderr=true:$GOPATH/src --swagger_out=logtostderr=true:../proto/ ../proto/api.proto
 
 type Server struct {
 	logger *logrus.Logger
