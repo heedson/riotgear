@@ -1,12 +1,11 @@
 syntax="proto3";
 
-import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/heedson/riotgear/proto";
 
 service EchoTest {
-    rpc Echo(EchoRequest) returns (google.protobuf.Empty) {
+    rpc Echo(EchoMsg) returns (EchoMsg) {
         option (google.api.http) = {
             post: "/api/v1/echo"
             body: "*"
@@ -14,6 +13,6 @@ service EchoTest {
     }
 }
 
-message EchoRequest {
+message EchoMsg {
     string value = 1;
 }

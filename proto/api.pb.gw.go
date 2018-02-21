@@ -29,7 +29,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_EchoTest_Echo_0(ctx context.Context, marshaler runtime.Marshaler, client EchoTestClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq EchoRequest
+	var protoReq EchoMsg
 	var metadata runtime.ServerMetadata
 
 	if req.ContentLength > 0 {
