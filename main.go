@@ -16,6 +16,7 @@ import (
 )
 
 type config struct {
+	RiotAPIKey  string `required:"true" envconfig:"RIOT_API_KEY" desc:"The Riot API key to use for access to the Riot API."`
 	GRPCAddr    string `default:"localhost:8081" envconfig:"GRPC_ADDR" desc:"Address to serve the gRPC Server on."`
 	GatewayAddr string `default:"0.0.0.0:8080" split_words:"true" desc:"Address to serve the gRPC-Gateway on."`
 }
@@ -29,13 +30,13 @@ func main() {
 		FullTimestamp:   true,
 	}
 
-	envOpts := config{}
-	err := envconfig.Process("", &envOpts)
-	if err != nil {
+	var envOpts config
+	if err := envconfig.Process("", &envOpts); err != nil {
 		envconfig.Usage("", &envOpts)
 		logger.WithError(err).Fatal()
 	}
 
+	logger.Infoln(envOpts.RiotAPIKey)
 	s := grpc.NewServer()
 
 	srv := api.NewServer(logger)
@@ -48,8 +49,7 @@ func main() {
 			logger.WithError(err).Fatal("Failed to start grpc listener")
 		}
 
-		err = s.Serve(lis)
-		if err != nil {
+		if err = s.Serve(lis); err != nil {
 			logger.WithError(err).Fatal("Failed to serve gRPC server")
 		}
 	}()
@@ -64,14 +64,12 @@ func main() {
 			EmitDefaults: true,
 		}),
 	)
-	err = proto.RegisterEchoTestHandler(context.Background(), mux, cc)
-	if err != nil {
+	if err = proto.RegisterEchoTestHandler(context.Background(), mux, cc); err != nil {
 		logger.WithError(err).Fatal("Failed to register echo test in gRPC-gateway")
 	}
 
 	logger.Infoln("Serving on", envOpts.GatewayAddr)
-	err = http.ListenAndServe(envOpts.GatewayAddr, mux)
-	if err != nil {
+	if err = http.ListenAndServe(envOpts.GatewayAddr, mux); err != nil {
 		logger.WithError(err).Fatal("Failed to serve gRPC-gateway")
 	}
 }
