@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"net/http"
+	"net/url"
 
 	"github.com/sirupsen/logrus"
 
@@ -13,16 +15,26 @@ import (
 
 type Server struct {
 	logger *logrus.Logger
+
+	baseURL    *url.URL
+	riotAPIKey string
+
+	httpClient *http.Client
 }
 
-func NewServer(logger *logrus.Logger) *Server {
+func NewServer(logger *logrus.Logger, baseURL *url.URL, riotAPIKey string) *Server {
 	return &Server{
-		logger: logger,
+		logger:     logger,
+		baseURL:    baseURL,
+		riotAPIKey: riotAPIKey,
+		httpClient: http.DefaultClient,
 	}
 }
 
 func (s *Server) Echo(ctx context.Context, req *proto.EchoMsg) (*proto.EchoMsg, error) {
 	s.logger.Infoln(req.GetValue())
+
+	http.Client
 
 	return &proto.EchoMsg{
 		Value: req.GetValue(),
