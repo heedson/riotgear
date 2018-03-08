@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -39,7 +40,7 @@ func main() {
 	logger.Infoln(envOpts.RiotAPIKey)
 	s := grpc.NewServer()
 
-	srv := api.NewServer(logger)
+	srv := api.NewServer(logger, &url.URL{Path: "euw1.api.riotgames.com"}, envOpts.RiotAPIKey)
 
 	proto.RegisterEchoTestServer(s, srv)
 
