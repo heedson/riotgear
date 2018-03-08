@@ -28,24 +28,36 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_EchoTest_Echo_0(ctx context.Context, marshaler runtime.Marshaler, client EchoTestClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq EchoMsg
+func request_Riotgear_GetPlayerID_0(ctx context.Context, marshaler runtime.Marshaler, client RiotgearClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PlayerIDReq
 	var metadata runtime.ServerMetadata
 
-	if req.ContentLength > 0 {
-		if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-		}
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["player_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "player_name")
 	}
 
-	msg, err := client.Echo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	protoReq.PlayerName, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "player_name", err)
+	}
+
+	msg, err := client.GetPlayerID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-// RegisterEchoTestHandlerFromEndpoint is same as RegisterEchoTestHandler but
+// RegisterRiotgearHandlerFromEndpoint is same as RegisterRiotgearHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterEchoTestHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterRiotgearHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
@@ -65,23 +77,23 @@ func RegisterEchoTestHandlerFromEndpoint(ctx context.Context, mux *runtime.Serve
 		}()
 	}()
 
-	return RegisterEchoTestHandler(ctx, mux, conn)
+	return RegisterRiotgearHandler(ctx, mux, conn)
 }
 
-// RegisterEchoTestHandler registers the http handlers for service EchoTest to "mux".
+// RegisterRiotgearHandler registers the http handlers for service Riotgear to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterEchoTestHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterEchoTestHandlerClient(ctx, mux, NewEchoTestClient(conn))
+func RegisterRiotgearHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterRiotgearHandlerClient(ctx, mux, NewRiotgearClient(conn))
 }
 
-// RegisterEchoTestHandler registers the http handlers for service EchoTest to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "EchoTestClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "EchoTestClient"
+// RegisterRiotgearHandler registers the http handlers for service Riotgear to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "RiotgearClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "RiotgearClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "EchoTestClient" to call the correct interceptors.
-func RegisterEchoTestHandlerClient(ctx context.Context, mux *runtime.ServeMux, client EchoTestClient) error {
+// "RiotgearClient" to call the correct interceptors.
+func RegisterRiotgearHandlerClient(ctx context.Context, mux *runtime.ServeMux, client RiotgearClient) error {
 
-	mux.Handle("POST", pattern_EchoTest_Echo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Riotgear_GetPlayerID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -99,14 +111,14 @@ func RegisterEchoTestHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_EchoTest_Echo_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Riotgear_GetPlayerID_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_EchoTest_Echo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Riotgear_GetPlayerID_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -114,9 +126,9 @@ func RegisterEchoTestHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 }
 
 var (
-	pattern_EchoTest_Echo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "echo"}, ""))
+	pattern_Riotgear_GetPlayerID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "player", "player_name", "id"}, ""))
 )
 
 var (
-	forward_EchoTest_Echo_0 = runtime.ForwardResponseMessage
+	forward_Riotgear_GetPlayerID_0 = runtime.ForwardResponseMessage
 )

@@ -40,9 +40,14 @@ func main() {
 	logger.Infoln(envOpts.RiotAPIKey)
 	s := grpc.NewServer()
 
-	srv := api.NewServer(logger, &url.URL{Path: "euw1.api.riotgames.com"}, envOpts.RiotAPIKey)
+	riotAPIPath, err := url.Parse("https://euw1.api.riotgames.com")
+	if err != nil {
+		logger.WithError(err).Fatal()
+	}
 
-	proto.RegisterEchoTestServer(s, srv)
+	srv := api.NewServer(logger, riotAPIPath, envOpts.RiotAPIKey)
+
+	proto.RegisterRiotgearServer(s, srv)
 
 	go func() {
 		lis, err := net.Listen("tcp", envOpts.GRPCAddr)
@@ -65,7 +70,7 @@ func main() {
 			EmitDefaults: true,
 		}),
 	)
-	if err = proto.RegisterEchoTestHandler(context.Background(), mux, cc); err != nil {
+	if err = proto.RegisterRiotgearHandler(context.Background(), mux, cc); err != nil {
 		logger.WithError(err).Fatal("Failed to register echo test in gRPC-gateway")
 	}
 

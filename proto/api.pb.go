@@ -8,7 +8,8 @@ It is generated from these files:
 	api.proto
 
 It has these top-level messages:
-	EchoMsg
+	PlayerIDReq
+	PlayerID
 */
 package proto
 
@@ -33,24 +34,41 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type EchoMsg struct {
-	Value string `protobuf:"bytes,1,opt,name=value" json:"value,omitempty"`
+type PlayerIDReq struct {
+	PlayerName string `protobuf:"bytes,1,opt,name=player_name,json=playerName" json:"player_name,omitempty"`
 }
 
-func (m *EchoMsg) Reset()                    { *m = EchoMsg{} }
-func (m *EchoMsg) String() string            { return proto1.CompactTextString(m) }
-func (*EchoMsg) ProtoMessage()               {}
-func (*EchoMsg) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *PlayerIDReq) Reset()                    { *m = PlayerIDReq{} }
+func (m *PlayerIDReq) String() string            { return proto1.CompactTextString(m) }
+func (*PlayerIDReq) ProtoMessage()               {}
+func (*PlayerIDReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *EchoMsg) GetValue() string {
+func (m *PlayerIDReq) GetPlayerName() string {
 	if m != nil {
-		return m.Value
+		return m.PlayerName
 	}
 	return ""
 }
 
+type PlayerID struct {
+	PlayerId int64 `protobuf:"varint,1,opt,name=player_id,json=playerId" json:"player_id,omitempty"`
+}
+
+func (m *PlayerID) Reset()                    { *m = PlayerID{} }
+func (m *PlayerID) String() string            { return proto1.CompactTextString(m) }
+func (*PlayerID) ProtoMessage()               {}
+func (*PlayerID) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *PlayerID) GetPlayerId() int64 {
+	if m != nil {
+		return m.PlayerId
+	}
+	return 0
+}
+
 func init() {
-	proto1.RegisterType((*EchoMsg)(nil), "EchoMsg")
+	proto1.RegisterType((*PlayerIDReq)(nil), "PlayerIDReq")
+	proto1.RegisterType((*PlayerID)(nil), "PlayerID")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -61,64 +79,64 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for EchoTest service
+// Client API for Riotgear service
 
-type EchoTestClient interface {
-	Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOption) (*EchoMsg, error)
+type RiotgearClient interface {
+	GetPlayerID(ctx context.Context, in *PlayerIDReq, opts ...grpc.CallOption) (*PlayerID, error)
 }
 
-type echoTestClient struct {
+type riotgearClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewEchoTestClient(cc *grpc.ClientConn) EchoTestClient {
-	return &echoTestClient{cc}
+func NewRiotgearClient(cc *grpc.ClientConn) RiotgearClient {
+	return &riotgearClient{cc}
 }
 
-func (c *echoTestClient) Echo(ctx context.Context, in *EchoMsg, opts ...grpc.CallOption) (*EchoMsg, error) {
-	out := new(EchoMsg)
-	err := grpc.Invoke(ctx, "/EchoTest/Echo", in, out, c.cc, opts...)
+func (c *riotgearClient) GetPlayerID(ctx context.Context, in *PlayerIDReq, opts ...grpc.CallOption) (*PlayerID, error) {
+	out := new(PlayerID)
+	err := grpc.Invoke(ctx, "/Riotgear/GetPlayerID", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for EchoTest service
+// Server API for Riotgear service
 
-type EchoTestServer interface {
-	Echo(context.Context, *EchoMsg) (*EchoMsg, error)
+type RiotgearServer interface {
+	GetPlayerID(context.Context, *PlayerIDReq) (*PlayerID, error)
 }
 
-func RegisterEchoTestServer(s *grpc.Server, srv EchoTestServer) {
-	s.RegisterService(&_EchoTest_serviceDesc, srv)
+func RegisterRiotgearServer(s *grpc.Server, srv RiotgearServer) {
+	s.RegisterService(&_Riotgear_serviceDesc, srv)
 }
 
-func _EchoTest_Echo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EchoMsg)
+func _Riotgear_GetPlayerID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlayerIDReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EchoTestServer).Echo(ctx, in)
+		return srv.(RiotgearServer).GetPlayerID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/EchoTest/Echo",
+		FullMethod: "/Riotgear/GetPlayerID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EchoTestServer).Echo(ctx, req.(*EchoMsg))
+		return srv.(RiotgearServer).GetPlayerID(ctx, req.(*PlayerIDReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _EchoTest_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "EchoTest",
-	HandlerType: (*EchoTestServer)(nil),
+var _Riotgear_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "Riotgear",
+	HandlerType: (*RiotgearServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Echo",
-			Handler:    _EchoTest_Echo_Handler,
+			MethodName: "GetPlayerID",
+			Handler:    _Riotgear_GetPlayerID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -128,16 +146,19 @@ var _EchoTest_serviceDesc = grpc.ServiceDesc{
 func init() { proto1.RegisterFile("api.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 175 bytes of a gzipped FileDescriptorProto
+	// 214 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4c, 0x2c, 0xc8, 0xd4,
 	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x97, 0x92, 0x49, 0xcf, 0xcf, 0x4f, 0xcf, 0x49, 0xd5, 0x4f, 0x2c,
 	0xc8, 0xd4, 0x4f, 0xcc, 0xcb, 0xcb, 0x2f, 0x49, 0x2c, 0xc9, 0xcc, 0xcf, 0x2b, 0x86, 0xc8, 0x2a,
-	0xc9, 0x73, 0xb1, 0xbb, 0x26, 0x67, 0xe4, 0xfb, 0x16, 0xa7, 0x0b, 0x89, 0x70, 0xb1, 0x96, 0x25,
-	0xe6, 0x94, 0xa6, 0x4a, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x41, 0x38, 0x46, 0xf6, 0x5c, 0x1c,
-	0x20, 0x05, 0x21, 0xa9, 0xc5, 0x25, 0x42, 0xc6, 0x5c, 0x2c, 0x20, 0xb6, 0x10, 0x87, 0x1e, 0x54,
-	0x8f, 0x14, 0x9c, 0xa5, 0x24, 0xde, 0x74, 0xf9, 0xc9, 0x64, 0x26, 0x41, 0x25, 0x1e, 0xb0, 0x45,
-	0x65, 0x86, 0xfa, 0xa9, 0xc9, 0x19, 0xf9, 0x56, 0x8c, 0x5a, 0x4e, 0xca, 0x51, 0x8a, 0xe9, 0x99,
-	0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x19, 0xa9, 0xa9, 0x29, 0xc5, 0xf9, 0x79,
-	0xfa, 0x45, 0x99, 0xf9, 0x25, 0xe9, 0xa9, 0x89, 0x45, 0xfa, 0x60, 0x67, 0x24, 0xb1, 0x81, 0x29,
-	0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd4, 0xb1, 0xcb, 0xae, 0xb8, 0x00, 0x00, 0x00,
+	0xe9, 0x71, 0x71, 0x07, 0xe4, 0x24, 0x56, 0xa6, 0x16, 0x79, 0xba, 0x04, 0xa5, 0x16, 0x0a, 0xc9,
+	0x73, 0x71, 0x17, 0x80, 0xb9, 0xf1, 0x79, 0x89, 0xb9, 0xa9, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c,
+	0x41, 0x5c, 0x10, 0x21, 0xbf, 0xc4, 0xdc, 0x54, 0x25, 0x75, 0x2e, 0x0e, 0x98, 0x7a, 0x21, 0x69,
+	0x2e, 0x4e, 0xa8, 0xe2, 0xcc, 0x14, 0xb0, 0x52, 0xe6, 0x20, 0x0e, 0x88, 0x80, 0x67, 0x8a, 0x51,
+	0x34, 0x17, 0x47, 0x50, 0x66, 0x7e, 0x49, 0x7a, 0x6a, 0x62, 0x91, 0x90, 0x3f, 0x17, 0xb7, 0x7b,
+	0x6a, 0x09, 0x5c, 0x1f, 0x8f, 0x1e, 0x92, 0x95, 0x52, 0x9c, 0x70, 0x9e, 0x92, 0x7a, 0xd3, 0xe5,
+	0x27, 0x93, 0x99, 0x14, 0x85, 0xe4, 0xc1, 0x8e, 0x2d, 0x33, 0xd4, 0x87, 0x98, 0xa6, 0x5f, 0x8d,
+	0xe4, 0xa6, 0x5a, 0xfd, 0xcc, 0x14, 0x27, 0xe5, 0x28, 0xc5, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24,
+	0xbd, 0xe4, 0xfc, 0x5c, 0xfd, 0x8c, 0xd4, 0xd4, 0x94, 0xe2, 0xfc, 0x3c, 0xfd, 0x22, 0xa8, 0x7d,
+	0xfa, 0x60, 0xaf, 0x25, 0xb1, 0x81, 0x29, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x9d, 0xba,
+	0xe2, 0xf8, 0x0c, 0x01, 0x00, 0x00,
 }

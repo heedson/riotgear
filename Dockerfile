@@ -6,7 +6,7 @@ ENV CGO_ENABLED=0
 RUN cd /go/src/github.com/heedson/riotgear && go build -o /riotgear
 
 # Production stage
-FROM scratch
+FROM broady/cacerts
 COPY --from=build-env /riotgear /
 
 ENTRYPOINT ["/riotgear"]

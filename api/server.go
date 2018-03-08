@@ -3,10 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/heedson/riotgear/proto"
@@ -35,33 +37,36 @@ func NewServer(logger *logrus.Logger, baseURL *url.URL, riotAPIKey string) *Serv
 	}
 }
 
-func (s *Server) Echo(ctx context.Context, req *proto.EchoMsg) (*proto.EchoMsg, error) {
-	rel := &url.URL{Path: "/lol/league/v3/positions/by-summoner/heedson"}
+func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*proto.PlayerID, error) {
+	if pbReq.GetPlayerName() == "" {
+		return nil, errors.New("player name cannot be empty")
+	}
+
+	rel := &url.URL{Path: fmt.Sprintf("/lol/summoner/v3/summoners/by-name/%s", pbReq.GetPlayerName())}
 
 	u := s.baseURL.ResolveReference(rel)
-	re, err := http.NewRequest("GET", u.String(), nil)
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
-	re.Header.Set("Accept", "application/json")
-	re.Header.Set("X-Riot-Token", s.riotAPIKey)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Riot-Token", s.riotAPIKey)
 
-	resp, err := s.httpClient.Do(re)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer resp.Body.Close()
 
 	var data = make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
-	s.logger.Infof("%#v\n", data)
-	s.logger.Infoln(req.GetValue())
+	s.logger.Infoln(int(data["id"].(float64)))
 
-	return &proto.EchoMsg{
-		Value: req.GetValue(),
+	return &proto.PlayerID{
+		PlayerId: int64(data["id"].(float64)),
 	}, nil
 }
