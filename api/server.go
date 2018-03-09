@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,7 +15,6 @@ import (
 	"github.com/heedson/riotgear/proto"
 )
 
-// Fix when dep isn't shit
 //go:generate protoc -I../proto -I../thirdparty/googleapis/ --go_out=plugins=grpc:$GOPATH/src --grpc-gateway_out=logtostderr=true:$GOPATH/src ../proto/api.proto
 
 type Server struct {
@@ -24,6 +24,8 @@ type Server struct {
 	riotAPIKey string
 
 	httpClient *http.Client
+
+	nameRegexp *regexp.Regexp
 }
 
 func NewServer(logger *logrus.Logger, baseURL *url.URL, riotAPIKey string) *Server {
@@ -34,12 +36,13 @@ func NewServer(logger *logrus.Logger, baseURL *url.URL, riotAPIKey string) *Serv
 		httpClient: &http.Client{
 			Timeout: time.Second * 10,
 		},
+		nameRegexp: regexp.MustCompile(`^[0-9\p{L} _.]+$`),
 	}
 }
 
 func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*proto.PlayerID, error) {
-	if pbReq.GetPlayerName() == "" {
-		return nil, errors.New("player name cannot be empty")
+	if ok := s.nameRegexp.Match([]byte(pbReq.GetPlayerName())); !ok {
+		return nil, errors.Errorf("player name, %q, is not valid", pbReq.GetPlayerName())
 	}
 
 	rel := &url.URL{Path: fmt.Sprintf("/lol/summoner/v3/summoners/by-name/%s", pbReq.GetPlayerName())}
