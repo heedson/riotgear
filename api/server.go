@@ -65,6 +65,7 @@ func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*pr
 		return nil, errors.WithStack(err)
 	}
 
+	s.logger.Infof("%#v\n", data)
 	s.logger.Infoln(int(data["id"].(float64)))
 
 	return &proto.PlayerID{
