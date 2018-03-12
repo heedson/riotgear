@@ -24,6 +24,13 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+    "github.com/gogo/googleapis/google/api",
+    "github.com/gogo/protobuf/protoc-gen-gogo",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
+    "github.com/mwitkow/go-proto-validators/protoc-gen-govalidators",
+]
+
 [[constraint]]
   name = "github.com/kelseyhightower/envconfig"
   version = "1.3.0"
@@ -51,3 +58,21 @@
 [prune]
   go-tests = true
   unused-packages = true
+  non-go = true
+
+  [[prune.project]]
+    name = "github.com/gogo/protobuf"
+    non-go = false
+
+  [[prune.project]]
+    name = "github.com/gogo/googleapis"
+    non-go = false
+
+  [[prune.project]]
+    name = "github.com/grpc-ecosystem/grpc-gateway"
+    non-go = false
+
+  [[prune.project]]
+    name = "github.com/mwitkow/go-proto-validators"
+    non-go = false
+
