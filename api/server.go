@@ -15,8 +15,6 @@ import (
 	"github.com/heedson/riotgear/proto"
 )
 
-//go:generate protoc -I../proto -I../thirdparty/googleapis/ --go_out=plugins=grpc:$GOPATH/src --grpc-gateway_out=logtostderr=true:$GOPATH/src ../proto/api.proto
-
 type Server struct {
 	logger *logrus.Logger
 
