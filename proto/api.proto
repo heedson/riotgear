@@ -1,5 +1,6 @@
 syntax="proto3";
 
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/heedson/riotgear/proto";
