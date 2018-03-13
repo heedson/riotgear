@@ -25,8 +25,8 @@ var httpStatusToGRPCStatus = map[int]codes.Code{
 	http.StatusUnauthorized: codes.Unauthenticated,
 	// 403 Forbidden - PERMISSION_DENIED.
 	http.StatusForbidden: codes.PermissionDenied,
-	// 404 Not Found - UNIMPLEMENTED.
-	http.StatusNotFound: codes.Unimplemented,
+	// 404 Not Found - NOT_FOUND.
+	http.StatusNotFound: codes.NotFound,
 	// 429 Too Many Requests - UNAVAILABLE.
 	http.StatusTooManyRequests: codes.Unavailable,
 	// 502 Bad Gateway - UNAVAILABLE.
