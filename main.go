@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,6 +16,15 @@ import (
 	"github.com/heedson/riotgear/api"
 	"github.com/heedson/riotgear/proto"
 )
+
+func mustParseURL(serverName string) (serverURL *url.URL) {
+	serverURL, err := url.Parse(fmt.Sprintf("https://%s.api.riotgames.com", serverName))
+	if err != nil {
+		panic(err)
+	}
+
+	return serverURL
+}
 
 type config struct {
 	RiotAPIKey  string `required:"true" envconfig:"RIOT_API_KEY" desc:"The Riot API key to use for access to the Riot API."`
@@ -37,15 +47,25 @@ func main() {
 		logger.WithError(err).Fatal()
 	}
 
+	var regionsToServerURL = map[string]*url.URL{
+		"br":   mustParseURL("br1"),
+		"eune": mustParseURL("eun1"),
+		"euw":  mustParseURL("euw1"),
+		"jp":   mustParseURL("jp1"),
+		"kr":   mustParseURL("kr"),
+		"lan":  mustParseURL("la1"),
+		"las":  mustParseURL("la2"),
+		"na":   mustParseURL("na1"),
+		"oce":  mustParseURL("oc1"),
+		"tr":   mustParseURL("tr1"),
+		"ru":   mustParseURL("ru"),
+		"pbe":  mustParseURL("pbe1"),
+	}
+
 	logger.Infoln(envOpts.RiotAPIKey)
 	s := grpc.NewServer()
 
-	riotAPIPath, err := url.Parse("https://euw1.api.riotgames.com")
-	if err != nil {
-		logger.WithError(err).Fatal()
-	}
-
-	srv := api.NewServer(logger, riotAPIPath, envOpts.RiotAPIKey)
+	srv := api.NewServer(logger, regionsToServerURL, envOpts.RiotAPIKey)
 
 	proto.RegisterRiotgearServer(s, srv)
 

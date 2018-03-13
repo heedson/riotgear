@@ -1,6 +1,6 @@
 syntax="proto3";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/mwitkow/go-proto-validators/validator.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/heedson/riotgear/proto";
@@ -14,25 +14,10 @@ service Riotgear {
 }
 
 message PlayerIDReq {
-    Region region = 1;
+    string region = 1;
     string player_name = 2;
 }
 
 message PlayerID {
     int64 player_id = 1;
-}
-
-enum Region {
-    EUW = 0;
-    BR = 1;
-    EUNW = 2;
-    JP = 3;
-    KR = 4;
-    LAN = 5;
-    LAS = 6;
-    NA = 7;
-    OCE = 8;
-    TR = 9;
-    RU = 10;
-    PBE = 11;
 }

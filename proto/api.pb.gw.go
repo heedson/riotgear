@@ -39,6 +39,17 @@ func request_Riotgear_GetPlayerID_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
+	val, ok = pathParams["region"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "region")
+	}
+
+	protoReq.Region, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "region", err)
+	}
+
 	val, ok = pathParams["player_name"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "player_name")
@@ -126,7 +137,7 @@ func RegisterRiotgearHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 }
 
 var (
-	pattern_Riotgear_GetPlayerID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "player", "player_name", "id"}, ""))
+	pattern_Riotgear_GetPlayerID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "region", "player", "player_name", "id"}, ""))
 )
 
 var (
