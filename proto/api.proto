@@ -8,13 +8,13 @@ option go_package = "github.com/heedson/riotgear/proto";
 service Riotgear {
     rpc GetPlayerID(PlayerIDReq) returns (PlayerID) {
         option (google.api.http) = {
-            get: "/api/v1/{region}/player/{player_name}/id"
+            get: "/api/v1/{region_name}/player/{player_name}/id"
         };
     }
 }
 
 message PlayerIDReq {
-    string region = 1;
+    string region_name = 1;
     string player_name = 2;
 }
 
