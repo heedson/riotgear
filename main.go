@@ -62,7 +62,6 @@ func main() {
 		"pbe":  mustParseURL("pbe1"),
 	}
 
-	logger.Infoln(envOpts.RiotAPIKey)
 	s := grpc.NewServer()
 
 	srv := api.NewServer(logger, regionsToServerURL, envOpts.RiotAPIKey)
@@ -94,7 +93,7 @@ func main() {
 		logger.WithError(err).Fatal("Failed to register echo test in gRPC-gateway")
 	}
 
-	logger.Infoln("Serving on", envOpts.GatewayAddr)
+	logger.Infof("Serving on %q", envOpts.GatewayAddr)
 	if err = http.ListenAndServe(envOpts.GatewayAddr, mux); err != nil {
 		logger.WithError(err).Fatal("Failed to serve gRPC-gateway")
 	}
