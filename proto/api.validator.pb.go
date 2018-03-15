@@ -14,13 +14,17 @@ It has these top-level messages:
 package proto
 
 import proto1 "github.com/gogo/protobuf/proto"
+import golang_proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
 import _ "github.com/mwitkow/go-proto-validators"
 import _ "github.com/gogo/googleapis/google/api"
+import _ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto1.Marshal
+var _ = golang_proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 

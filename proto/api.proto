@@ -1,9 +1,31 @@
 syntax="proto3";
 
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/mwitkow/go-proto-validators/validator.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
 
 option go_package = "github.com/heedson/riotgear/proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    version: "WiP";
+  };
+  external_docs: {
+    url: "https://github.com/heedson/riotgear";
+    description: "Riotgear service source.";
+  }
+  schemes: HTTP;
+};
+
+// Enable custom Marshal method.
+option (gogoproto.marshaler_all) = true;
+// Enable custom Unmarshal method.
+option (gogoproto.unmarshaler_all) = true;
+// Enable custom Size method (Required by Marshal and Unmarshal).
+option (gogoproto.sizer_all) = true;
+// Enable registration with golang/protobuf for the grpc-gateway.
+option (gogoproto.goproto_registration) = true;
 
 service Riotgear {
     rpc GetPlayerID(PlayerIDReq) returns (PlayerID) {

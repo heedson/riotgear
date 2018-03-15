@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net"
 	"net/http"
 	"net/url"
@@ -10,11 +11,13 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/rakyll/statik/fs"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	"github.com/heedson/riotgear/api"
 	"github.com/heedson/riotgear/proto"
+	_ "github.com/heedson/riotgear/statik"
 )
 
 func mustParseURL(serverName string) (serverURL *url.URL) {
@@ -24,6 +27,23 @@ func mustParseURL(serverName string) (serverURL *url.URL) {
 	}
 
 	return serverURL
+}
+
+// serveOpenAPI serves an OpenAPI UI on /openapi-ui/
+// Adapted from https://github.com/philips/grpc-gateway-example/blob/a269bcb5931ca92be0ceae6130ac27ae89582ecc/cmd/serve.go#L63
+func serveOpenAPI(mux *http.ServeMux) error {
+	mime.AddExtensionType(".svg", "image/svg+xml")
+
+	statikFS, err := fs.New()
+	if err != nil {
+		return err
+	}
+
+	// Expose files in static on <host>/openapi-ui
+	fileServer := http.FileServer(statikFS)
+	prefix := "/openapi-ui/"
+	mux.Handle(prefix, http.StripPrefix(prefix, fileServer))
+	return nil
 }
 
 type config struct {
@@ -79,22 +99,36 @@ func main() {
 		}
 	}()
 
-	cc, err := grpc.Dial(envOpts.GRPCAddr, grpc.WithInsecure())
+	con, err := grpc.Dial(envOpts.GRPCAddr, grpc.WithInsecure())
 	if err != nil {
 		logger.WithError(err).Fatal("Failed to dial gRPC server")
 	}
 
-	mux := runtime.NewServeMux(
+	mux := http.NewServeMux()
+	gwMux := runtime.NewServeMux(
 		runtime.WithMarshalerOption("*", &runtime.JSONPb{
 			EmitDefaults: true,
 		}),
 	)
-	if err = proto.RegisterRiotgearHandler(context.Background(), mux, cc); err != nil {
-		logger.WithError(err).Fatal("Failed to register echo test in gRPC-gateway")
+	if err = proto.RegisterRiotgearHandler(context.Background(), gwMux, con); err != nil {
+		logger.WithError(err).Fatal("Failed to register riotgear in gRPC-gateway")
 	}
 
-	logger.Infof("Serving on %q", envOpts.GatewayAddr)
-	if err = http.ListenAndServe(envOpts.GatewayAddr, mux); err != nil {
+	mux.Handle("/", gwMux)
+
+	if err = serveOpenAPI(mux); err != nil {
+		logger.WithError(err).Fatal("Failed to serve OpenAPI UI")
+	}
+
+	logger.Infof("Serving gRPC-Gateway on http://%s", envOpts.GatewayAddr)
+	logger.Infof("Serving OpenAPI Documentation on http://%s/openapi-ui/", envOpts.GatewayAddr)
+
+	gwServer := http.Server{
+		Addr:    envOpts.GatewayAddr,
+		Handler: mux,
+	}
+
+	if err = gwServer.ListenAndServe(); err != nil {
 		logger.WithError(err).Fatal("Failed to serve gRPC-gateway")
 	}
 }
