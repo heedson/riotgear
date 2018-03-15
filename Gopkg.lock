@@ -70,6 +70,9 @@
     "protoc-gen-grpc-gateway/generator",
     "protoc-gen-grpc-gateway/gengateway",
     "protoc-gen-grpc-gateway/httprule",
+    "protoc-gen-swagger",
+    "protoc-gen-swagger/genswagger",
+    "protoc-gen-swagger/options",
     "runtime",
     "runtime/internal",
     "utilities"
@@ -98,6 +101,15 @@
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  name = "github.com/rakyll/statik"
+  packages = [
+    ".",
+    "fs"
+  ]
+  revision = "fd36b3595eb2ec8da4b8153b107f7ea08504899d"
+  version = "v0.1.1"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -197,6 +209,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e3a6dcdfa5016195d8f0972e990d8fe2af63e589e3355f17e1a03200fceb64af"
+  inputs-digest = "d20c272f36978a1bcaf07aa1de423a64681957dbe2a58e7a1a3021761ae69271"
   solver-name = "gps-cdcl"
   solver-version = 1

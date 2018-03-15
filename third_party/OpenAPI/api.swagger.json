@@ -1,0 +1,63 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api.proto",
+    "version": "WiP"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/{region_name}/player/{player_name}/id": {
+      "get": {
+        "operationId": "GetPlayerID",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PlayerID"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "region_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "player_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Riotgear"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "PlayerID": {
+      "type": "object",
+      "properties": {
+        "player_id": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Riotgear service source.",
+    "url": "https://github.com/heedson/riotgear"
+  }
+}

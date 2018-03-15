@@ -8,6 +8,7 @@ generate:
 	#
 	# --gogo_out generates GoGo Protobuf output with gRPC plugin enabled.
 	# --grpc-gateway_out generates gRPC-Gateway output.
+	# --swagger_out generates an OpenAPI 2.0 specification for our gRPC-Gateway endpoints.
 	# --govalidators_out generates Go validation files for our messages types, if specified.
 	#
 	# The lines starting with Mgoogle/... are proto import replacements,
@@ -33,6 +34,7 @@ Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
 Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
 $$GOPATH/src/ \
+		--swagger_out=third_party/OpenAPI/ \
 		--govalidators_out=gogoimport=true,\
 Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
@@ -43,9 +45,12 @@ $$GOPATH/src \
 	# Workaround for https://github.com/grpc-ecosystem/grpc-gateway/issues/229.
 	sed -i "s/empty.Empty/types.Empty/g" proto/api.pb.gw.go
 
+	statik -f -src=third_party/OpenAPI
 
 install:
 	go install \
-		./vendor/github.com/gogo/protobuf/protoc-gen-gogo \
-		./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
-		./vendor/github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+        ./vendor/github.com/gogo/protobuf/protoc-gen-gogo \
+        ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
+        ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger \
+        ./vendor/github.com/mwitkow/go-proto-validators/protoc-gen-govalidators \
+        ./vendor/github.com/rakyll/statik
