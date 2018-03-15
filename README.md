@@ -7,7 +7,7 @@ To run the service locally.
 sudo docker build -t riotgear .
 sudo docker run -p 8080:8080 --name riotgear -e RIOT_API_KEY=myapikey riotgear
 ```
-To get a response from the current Riotgear server.
+To get a response from the current Riotgear server, head to:
 ```
-curl -H "Content-Type: application/json" -X GET http://$(sudo docker inspect --format '{{.NetworkSettings.IPAddress}}' riotgear):8080/api/v1/{region_name}/player/{player_name}/id
+http://0.0.0.0:8080/openapi-ui/
 ```
