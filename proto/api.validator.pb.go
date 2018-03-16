@@ -10,6 +10,7 @@ It is generated from these files:
 It has these top-level messages:
 	PlayerIDReq
 	PlayerID
+	PlayerRankReq
 */
 package proto
 
@@ -32,5 +33,8 @@ func (this *PlayerIDReq) Validate() error {
 	return nil
 }
 func (this *PlayerID) Validate() error {
+	return nil
+}
+func (this *PlayerRankReq) Validate() error {
 	return nil
 }

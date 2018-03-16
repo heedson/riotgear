@@ -43,6 +43,36 @@
           "Riotgear"
         ]
       }
+    },
+    "/api/v1/{region_name}/rank/{player_name}": {
+      "get": {
+        "operationId": "GetPlayerRank",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/PlayerID"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "region_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "player_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Riotgear"
+        ]
+      }
     }
   },
   "definitions": {

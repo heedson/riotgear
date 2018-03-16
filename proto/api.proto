@@ -33,6 +33,12 @@ service Riotgear {
             get: "/api/v1/{region_name}/player/{player_name}/id"
         };
     }
+
+    rpc GetPlayerRank(PlayerRankReq) returns (PlayerID) {
+        option (google.api.http) = {
+            get: "/api/v1/{region_name}/rank/{player_name}"
+        };
+    }
 }
 
 message PlayerIDReq {
@@ -42,4 +48,9 @@ message PlayerIDReq {
 
 message PlayerID {
     int64 player_id = 1;
+}
+
+message PlayerRankReq {
+    string region_name = 1;
+    string player_name = 2;
 }
