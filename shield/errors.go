@@ -1,4 +1,4 @@
-package gear
+package shield
 
 import "github.com/pkg/errors"
 
