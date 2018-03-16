@@ -45,7 +45,7 @@ $$GOPATH/src \
 	# Workaround for https://github.com/grpc-ecosystem/grpc-gateway/issues/229.
 	sed -i "s/empty.Empty/types.Empty/g" proto/api.pb.gw.go
 
-	statik -f -src=third_party/OpenAPI
+	statik -m -f -src=third_party/OpenAPI
 
 install:
 	go install \
