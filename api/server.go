@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -43,15 +42,13 @@ type Server struct {
 	nameRegexp *regexp.Regexp
 }
 
-func NewServer(logger *logrus.Logger, regionToServerURL map[string]*url.URL, riotAPIKey string) *Server {
+func NewServer(logger *logrus.Logger, client *http.Client, regionToServerURL map[string]*url.URL, riotAPIKey string) *Server {
 	return &Server{
 		logger:            logger,
 		regionToServerURL: regionToServerURL,
 		riotAPIKey:        riotAPIKey,
-		httpClient: &http.Client{
-			Timeout: time.Second * 10,
-		},
-		nameRegexp: regexp.MustCompile(`^[0-9\p{L} _.]+$`),
+		httpClient:        client,
+		nameRegexp:        regexp.MustCompile(`^[0-9\p{L} _.]+$`),
 	}
 }
 
@@ -64,9 +61,9 @@ func (s *Server) getServerURL(regionName string) (*url.URL, error) {
 	return serverURL, nil
 }
 
-func (s *Server) getPlayerID(serverURL *url.URL, playerName string) (int, error) {
+func (s *Server) getPlayerData(serverURL *url.URL, playerName string) (*gear.PlayerData, error) {
 	if ok := s.nameRegexp.Match([]byte(playerName)); !ok {
-		return 0, shield.Errorf(shield.InvalidArgument, "%q is not a valid player name", playerName)
+		return nil, shield.Errorf(shield.InvalidArgument, "%q is not a valid player name", playerName)
 	}
 
 	rel := &url.URL{Path: "/lol/summoner/v3/summoners/by-name/" + playerName}
@@ -75,30 +72,28 @@ func (s *Server) getPlayerID(serverURL *url.URL, playerName string) (int, error)
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return 0, shield.Wrap(shield.Internal, err)
+		return nil, shield.Wrap(shield.Internal, err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Riot-Token", s.riotAPIKey)
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return 0, shield.Wrap(shield.Internal, err)
+		return nil, shield.Wrap(shield.Internal, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, shield.Error(shield.Internal, resp.Status)
+		return nil, shield.Errorf(shield.Internal, "%s. Player name %q", resp.Status, playerName)
 	}
 
-	var data = make(map[string]interface{})
+	var data gear.PlayerData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return 0, shield.Wrap(shield.Internal, err)
+		return nil, shield.Wrap(shield.Internal, err)
 	}
 
-	playerID := int(data["id"].(float64))
-
-	return playerID, nil
+	return &data, nil
 }
 
 func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*proto.PlayerID, error) {
@@ -107,15 +102,15 @@ func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*pr
 		return nil, getGRPCError(err)
 	}
 
-	playerID, err := s.getPlayerID(serverURL, pbReq.GetPlayerName())
+	playerData, err := s.getPlayerData(serverURL, pbReq.GetPlayerName())
 	if err != nil {
 		return nil, getGRPCError(err)
 	}
 
-	s.logger.Infof("Request for %s on %s. Player ID %d.", pbReq.GetPlayerName(), strings.ToUpper(pbReq.GetRegionName()), playerID)
+	s.logger.Infof("Request for %s on %s. Player ID %d.", playerData.Name, strings.ToUpper(pbReq.GetRegionName()), int(playerData.ID))
 
 	return &proto.PlayerID{
-		PlayerId: int64(playerID),
+		PlayerId: int64(playerData.ID),
 	}, nil
 }
 
@@ -125,14 +120,14 @@ func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) 
 		return nil, getGRPCError(err)
 	}
 
-	playerID, err := s.getPlayerID(serverURL, pbReq.GetPlayerName())
+	playerData, err := s.getPlayerData(serverURL, pbReq.GetPlayerName())
 	if err != nil {
 		return nil, getGRPCError(err)
 	}
 
-	s.logger.Infof("Request for %s on %s. Player ID %d.", pbReq.GetPlayerName(), strings.ToUpper(pbReq.GetRegionName()), playerID)
+	s.logger.Infof("Request for %s on %s. Player ID %d.", playerData.Name, strings.ToUpper(pbReq.GetRegionName()), int(playerData.ID))
 
-	rel := &url.URL{Path: fmt.Sprintf("/lol/league/v3/positions/by-summoner/%d", playerID)}
+	rel := &url.URL{Path: fmt.Sprintf("/lol/league/v3/positions/by-summoner/%d", int(playerData.ID))}
 
 	u := serverURL.ResolveReference(rel)
 
@@ -150,7 +145,7 @@ func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, getGRPCError(shield.Error(shield.Internal, resp.Status))
+		return nil, getGRPCError(shield.Errorf(shield.Internal, "%s. Player ID %d", resp.Status, int(playerData.ID)))
 	}
 
 	//var rankData gear.RankData
@@ -163,6 +158,6 @@ func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) 
 	s.logger.Infof("%#v", data)
 
 	return &proto.PlayerID{
-		PlayerId: int64(playerID),
+		PlayerId: int64(playerData.ID),
 	}, nil
 }
