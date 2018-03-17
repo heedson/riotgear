@@ -1,5 +1,14 @@
 package gear
 
+type PlayerData struct {
+	ProfileIconID int
+	Name          string
+	SummonerLevel float64
+	RevisionDate  float64
+	ID            float64
+	AccountID     float64
+}
+
 type RankData struct {
 	Ranks []LeaguePositionData
 }

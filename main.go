@@ -84,7 +84,14 @@ func main() {
 
 	s := grpc.NewServer()
 
-	srv := api.NewServer(logger, regionsToServerURL, envOpts.RiotAPIKey)
+	srv := api.NewServer(
+		logger,
+		&http.Client{
+			Timeout: time.Second * 10,
+		},
+		regionsToServerURL,
+		envOpts.RiotAPIKey,
+	)
 
 	proto.RegisterRiotgearServer(s, srv)
 
