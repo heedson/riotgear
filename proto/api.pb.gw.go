@@ -29,7 +29,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_Riotgear_GetPlayerID_0(ctx context.Context, marshaler runtime.Marshaler, client RiotgearClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PlayerIDReq
+	var protoReq PlayerReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -67,7 +67,7 @@ func request_Riotgear_GetPlayerID_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func request_Riotgear_GetPlayerRank_0(ctx context.Context, marshaler runtime.Marshaler, client RiotgearClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PlayerRankReq
+	var protoReq PlayerReq
 	var metadata runtime.ServerMetadata
 
 	var (

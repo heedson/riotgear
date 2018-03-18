@@ -16,6 +16,7 @@
   "paths": {
     "/api/v1/{region_name}/player/{player_name}/id": {
       "get": {
+        "summary": "GetPlayerID returns the player ID when given the region and a player name.\nThis is just an example use of Riot's League of Lengend's API.",
         "operationId": "GetPlayerID",
         "responses": {
           "200": {
@@ -46,12 +47,13 @@
     },
     "/api/v1/{region_name}/rank/{player_name}": {
       "get": {
+        "summary": "GetPlayerRank returns the rank stats for all queue types for a given player name\non a given region.",
         "operationId": "GetPlayerRank",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/PlayerID"
+              "$ref": "#/definitions/PlayerRank"
             }
           }
         },
@@ -76,6 +78,31 @@
     }
   },
   "definitions": {
+    "LeaguePositionMiniSeries": {
+      "type": "object",
+      "properties": {
+        "wins": {
+          "type": "string",
+          "format": "int64",
+          "description": "Wins is the number of wins for the player in an ongoing mini series.\nIf there isn't an ongoing mini series then this is 0."
+        },
+        "losses": {
+          "type": "string",
+          "format": "int64",
+          "description": "Losses is the number of losses for the player in an ongoing mini series.\nIf there isn't an ongoing mini series then this is 0."
+        },
+        "target": {
+          "type": "string",
+          "format": "int64",
+          "description": "Target is the target number of wins to succeed in the mini series.\nIf there isn't an ongoing mini series then this is 0."
+        },
+        "progress": {
+          "type": "string",
+          "description": "Progress \u003cNot sure myself...\u003e\nIf there isn't an ongoing mini series then this is an empty string."
+        }
+      },
+      "description": "MiniSeries is the data for a potential \"promotion series\" or any other sort of\nimportant mini series."
+    },
     "PlayerID": {
       "type": "object",
       "properties": {
@@ -83,11 +110,98 @@
           "type": "string",
           "format": "int64"
         }
-      }
+      },
+      "description": "PlayerID is a message with a player's ID. This is useful for potential API queries that\nrequire a player ID instead of a player name."
+    },
+    "PlayerRank": {
+      "type": "object",
+      "properties": {
+        "league_positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PlayerRankLeaguePosition"
+          },
+          "description": "LeaguePositions is a list of league positions for the player."
+        }
+      },
+      "description": "PlayerRank is a message that contains all of the ranked data of a single player."
+    },
+    "PlayerRankLeaguePosition": {
+      "type": "object",
+      "properties": {
+        "rank": {
+          "type": "string",
+          "title": "Rank is the rank within a given league. i.e I, II, III, IV, V"
+        },
+        "queue_type": {
+          "type": "string",
+          "description": "QueueType is the name of the queue that these stats are for.\ni.e. RANKED_SOLO_5x5, RANKED_FLEX_SR."
+        },
+        "hot_streak": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "HotStreak is whether the player is currently in a 3 or more game winning streak."
+        },
+        "mini_series": {
+          "$ref": "#/definitions/LeaguePositionMiniSeries",
+          "description": "MiniSeries is the details on an ongoing mini series that the player may be in."
+        },
+        "wins": {
+          "type": "string",
+          "format": "int64",
+          "description": "Wins is the number of wins the player has in total in this queue type."
+        },
+        "veteran": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Veteran is true when the player has more than 100 games played in their current league."
+        },
+        "losses": {
+          "type": "string",
+          "format": "int64",
+          "description": "Losses is the number of losses the player has in total in this queue type."
+        },
+        "fresh_blood": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "FreshBlood is true when the player has less than 50 (Maybe?) games played in their current league."
+        },
+        "league_id": {
+          "type": "string",
+          "description": "LeagueId is the unique name of the player's current league."
+        },
+        "player_or_team_name": {
+          "type": "string",
+          "description": "PlayerOrTeamName is the name of the individual player or ranked team of players."
+        },
+        "inactive": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Inactive \u003cNot sure myself...\u003e"
+        },
+        "player_or_team_id": {
+          "type": "string",
+          "description": "PlayerOrTeamId is the ID of the individual player or ranked team of players."
+        },
+        "league_name": {
+          "type": "string",
+          "description": "LeagueName is the human readable, lore-tied name of the player's league. e.g. \"Urgot's Maulers\"."
+        },
+        "tier": {
+          "type": "string",
+          "description": "Tier is the tier name of the player's rank. i.e. BRONZE, SILVER, GOLD, PLATINUM, etc."
+        },
+        "league_points": {
+          "type": "string",
+          "format": "int64",
+          "description": "LeaguePoints is the current number of points the player has in the ranked ladder."
+        }
+      },
+      "description": "LeaguePosition is data for an individual ranked queue."
     }
   },
   "externalDocs": {
-    "description": "Riotgear service source.",
+    "description": "Riotgear service Github project.",
     "url": "https://github.com/heedson/riotgear"
   }
 }

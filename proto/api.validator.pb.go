@@ -8,12 +8,13 @@ It is generated from these files:
 	api.proto
 
 It has these top-level messages:
-	PlayerIDReq
+	PlayerReq
 	PlayerID
-	PlayerRankReq
+	PlayerRank
 */
 package proto
 
+import go_proto_validators "github.com/mwitkow/go-proto-validators"
 import proto1 "github.com/gogo/protobuf/proto"
 import golang_proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
@@ -29,12 +30,30 @@ var _ = golang_proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-func (this *PlayerIDReq) Validate() error {
+func (this *PlayerReq) Validate() error {
 	return nil
 }
 func (this *PlayerID) Validate() error {
 	return nil
 }
-func (this *PlayerRankReq) Validate() error {
+func (this *PlayerRank) Validate() error {
+	for _, item := range this.LeaguePositions {
+		if item != nil {
+			if err := go_proto_validators.CallValidatorIfExists(item); err != nil {
+				return go_proto_validators.FieldError("LeaguePositions", err)
+			}
+		}
+	}
+	return nil
+}
+func (this *PlayerRank_LeaguePosition) Validate() error {
+	if this.MiniSeries != nil {
+		if err := go_proto_validators.CallValidatorIfExists(this.MiniSeries); err != nil {
+			return go_proto_validators.FieldError("MiniSeries", err)
+		}
+	}
+	return nil
+}
+func (this *PlayerRank_LeaguePosition_MiniSeries) Validate() error {
 	return nil
 }

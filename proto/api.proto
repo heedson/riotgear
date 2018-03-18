@@ -13,7 +13,7 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   };
   external_docs: {
     url: "https://github.com/heedson/riotgear";
-    description: "Riotgear service source.";
+    description: "Riotgear service Github project.";
   }
   schemes: HTTP;
 };
@@ -28,29 +28,93 @@ option (gogoproto.sizer_all) = true;
 option (gogoproto.goproto_registration) = true;
 
 service Riotgear {
-    rpc GetPlayerID(PlayerIDReq) returns (PlayerID) {
+    // GetPlayerID returns the player ID when given the region and a player name.
+    // This is just an example use of Riot's League of Lengend's API.
+    rpc GetPlayerID(PlayerReq) returns (PlayerID) {
         option (google.api.http) = {
             get: "/api/v1/{region_name}/player/{player_name}/id"
         };
     }
 
-    rpc GetPlayerRank(PlayerRankReq) returns (PlayerID) {
+    // GetPlayerRank returns the rank stats for all queue types for a given player name
+    // on a given region.
+    rpc GetPlayerRank(PlayerReq) returns (PlayerRank) {
         option (google.api.http) = {
             get: "/api/v1/{region_name}/rank/{player_name}"
         };
     }
 }
 
-message PlayerIDReq {
+// PlayerReq is a message with a region and player name used to request various resources
+// using a player name rather than a harder-to-remember player ID.
+message PlayerReq {
+    // RegionName is the name of the region to make the request to.
     string region_name = 1;
+    // PlayerName is the name of the player to retrieve the specific resources for.
     string player_name = 2;
 }
 
+// PlayerID is a message with a player's ID. This is useful for potential API queries that
+// require a player ID instead of a player name.
 message PlayerID {
     int64 player_id = 1;
 }
 
-message PlayerRankReq {
-    string region_name = 1;
-    string player_name = 2;
+// PlayerRank is a message that contains all of the ranked data of a single player.
+message PlayerRank {
+    // LeaguePosition is data for an individual ranked queue.
+    message LeaguePosition {
+        // MiniSeries is the data for a potential "promotion series" or any other sort of
+        // important mini series.
+        message MiniSeries{
+            // Wins is the number of wins for the player in an ongoing mini series.
+            // If there isn't an ongoing mini series then this is 0.
+            int64 wins = 1;
+            // Losses is the number of losses for the player in an ongoing mini series.
+            // If there isn't an ongoing mini series then this is 0.
+            int64 losses = 2;
+            // Target is the target number of wins to succeed in the mini series.
+            // If there isn't an ongoing mini series then this is 0.
+            int64 target = 3;
+            // Progress <Not sure myself...>
+            // If there isn't an ongoing mini series then this is an empty string.
+            string progress = 4;
+        }
+
+        // Rank is the rank within a given league. i.e I, II, III, IV, V
+	    string rank = 1;
+        // QueueType is the name of the queue that these stats are for.
+        // i.e. RANKED_SOLO_5x5, RANKED_FLEX_SR.
+	    string queue_type = 2;
+        // HotStreak is whether the player is currently in a 3 or more game winning streak.
+	    bool hot_streak = 3;
+        // MiniSeries is the details on an ongoing mini series that the player may be in.
+	    MiniSeries mini_series = 4;
+        // Wins is the number of wins the player has in total in this queue type.
+	    int64 wins = 5;
+        // Veteran is true when the player has more than 100 games played in their current league.
+        bool veteran = 6;
+        // Losses is the number of losses the player has in total in this queue type.
+	    int64 losses = 7;
+        // FreshBlood is true when the player has less than 50 (Maybe?) games played in their current league.
+	    bool fresh_blood = 8;
+        // LeagueId is the unique name of the player's current league.
+	    string league_id = 9;
+        // PlayerOrTeamName is the name of the individual player or ranked team of players.
+	    string player_or_team_name = 10;
+        // Inactive <Not sure myself...>
+	    bool inactive = 11;
+        // PlayerOrTeamId is the ID of the individual player or ranked team of players.
+	    string player_or_team_id = 12;
+        // LeagueName is the human readable, lore-tied name of the player's league. e.g. "Urgot's Maulers".
+	    string league_name = 13;
+        // Tier is the tier name of the player's rank. i.e. BRONZE, SILVER, GOLD, PLATINUM, etc.
+	    string tier = 14;
+        // LeaguePoints is the current number of points the player has in the ranked ladder.
+	    int64 league_points = 15;
+    }
+
+    // LeaguePositions is a list of league positions for the player.
+    repeated LeaguePosition league_positions = 1;
 }
+

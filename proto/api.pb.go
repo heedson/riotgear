@@ -8,9 +8,9 @@
 		api.proto
 
 	It has these top-level messages:
-		PlayerIDReq
+		PlayerReq
 		PlayerID
-		PlayerRankReq
+		PlayerRank
 */
 package proto
 
@@ -40,30 +40,36 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-type PlayerIDReq struct {
+// PlayerReq is a message with a region and player name used to request various resources
+// using a player name rather than a harder-to-remember player ID.
+type PlayerReq struct {
+	// RegionName is the name of the region to make the request to.
 	RegionName string `protobuf:"bytes,1,opt,name=region_name,json=regionName,proto3" json:"region_name,omitempty"`
+	// PlayerName is the name of the player to retrieve the specific resources for.
 	PlayerName string `protobuf:"bytes,2,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
 }
 
-func (m *PlayerIDReq) Reset()                    { *m = PlayerIDReq{} }
-func (m *PlayerIDReq) String() string            { return proto1.CompactTextString(m) }
-func (*PlayerIDReq) ProtoMessage()               {}
-func (*PlayerIDReq) Descriptor() ([]byte, []int) { return fileDescriptorApi, []int{0} }
+func (m *PlayerReq) Reset()                    { *m = PlayerReq{} }
+func (m *PlayerReq) String() string            { return proto1.CompactTextString(m) }
+func (*PlayerReq) ProtoMessage()               {}
+func (*PlayerReq) Descriptor() ([]byte, []int) { return fileDescriptorApi, []int{0} }
 
-func (m *PlayerIDReq) GetRegionName() string {
+func (m *PlayerReq) GetRegionName() string {
 	if m != nil {
 		return m.RegionName
 	}
 	return ""
 }
 
-func (m *PlayerIDReq) GetPlayerName() string {
+func (m *PlayerReq) GetPlayerName() string {
 	if m != nil {
 		return m.PlayerName
 	}
 	return ""
 }
 
+// PlayerID is a message with a player's ID. This is useful for potential API queries that
+// require a player ID instead of a player name.
 type PlayerID struct {
 	PlayerId int64 `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 }
@@ -80,37 +86,232 @@ func (m *PlayerID) GetPlayerId() int64 {
 	return 0
 }
 
-type PlayerRankReq struct {
-	RegionName string `protobuf:"bytes,1,opt,name=region_name,json=regionName,proto3" json:"region_name,omitempty"`
-	PlayerName string `protobuf:"bytes,2,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
+// PlayerRank is a message that contains all of the ranked data of a single player.
+type PlayerRank struct {
+	// LeaguePositions is a list of league positions for the player.
+	LeaguePositions []*PlayerRank_LeaguePosition `protobuf:"bytes,1,rep,name=league_positions,json=leaguePositions" json:"league_positions,omitempty"`
 }
 
-func (m *PlayerRankReq) Reset()                    { *m = PlayerRankReq{} }
-func (m *PlayerRankReq) String() string            { return proto1.CompactTextString(m) }
-func (*PlayerRankReq) ProtoMessage()               {}
-func (*PlayerRankReq) Descriptor() ([]byte, []int) { return fileDescriptorApi, []int{2} }
+func (m *PlayerRank) Reset()                    { *m = PlayerRank{} }
+func (m *PlayerRank) String() string            { return proto1.CompactTextString(m) }
+func (*PlayerRank) ProtoMessage()               {}
+func (*PlayerRank) Descriptor() ([]byte, []int) { return fileDescriptorApi, []int{2} }
 
-func (m *PlayerRankReq) GetRegionName() string {
+func (m *PlayerRank) GetLeaguePositions() []*PlayerRank_LeaguePosition {
 	if m != nil {
-		return m.RegionName
+		return m.LeaguePositions
+	}
+	return nil
+}
+
+// LeaguePosition is data for an individual ranked queue.
+type PlayerRank_LeaguePosition struct {
+	// Rank is the rank within a given league. i.e I, II, III, IV, V
+	Rank string `protobuf:"bytes,1,opt,name=rank,proto3" json:"rank,omitempty"`
+	// QueueType is the name of the queue that these stats are for.
+	// i.e. RANKED_SOLO_5x5, RANKED_FLEX_SR.
+	QueueType string `protobuf:"bytes,2,opt,name=queue_type,json=queueType,proto3" json:"queue_type,omitempty"`
+	// HotStreak is whether the player is currently in a 3 or more game winning streak.
+	HotStreak bool `protobuf:"varint,3,opt,name=hot_streak,json=hotStreak,proto3" json:"hot_streak,omitempty"`
+	// MiniSeries is the details on an ongoing mini series that the player may be in.
+	MiniSeries *PlayerRank_LeaguePosition_MiniSeries `protobuf:"bytes,4,opt,name=mini_series,json=miniSeries" json:"mini_series,omitempty"`
+	// Wins is the number of wins the player has in total in this queue type.
+	Wins int64 `protobuf:"varint,5,opt,name=wins,proto3" json:"wins,omitempty"`
+	// Veteran is true when the player has more than 100 games played in their current league.
+	Veteran bool `protobuf:"varint,6,opt,name=veteran,proto3" json:"veteran,omitempty"`
+	// Losses is the number of losses the player has in total in this queue type.
+	Losses int64 `protobuf:"varint,7,opt,name=losses,proto3" json:"losses,omitempty"`
+	// FreshBlood is true when the player has less than 50 (Maybe?) games played in their current league.
+	FreshBlood bool `protobuf:"varint,8,opt,name=fresh_blood,json=freshBlood,proto3" json:"fresh_blood,omitempty"`
+	// LeagueId is the unique name of the player's current league.
+	LeagueId string `protobuf:"bytes,9,opt,name=league_id,json=leagueId,proto3" json:"league_id,omitempty"`
+	// PlayerOrTeamName is the name of the individual player or ranked team of players.
+	PlayerOrTeamName string `protobuf:"bytes,10,opt,name=player_or_team_name,json=playerOrTeamName,proto3" json:"player_or_team_name,omitempty"`
+	// Inactive <Not sure myself...>
+	Inactive bool `protobuf:"varint,11,opt,name=inactive,proto3" json:"inactive,omitempty"`
+	// PlayerOrTeamId is the ID of the individual player or ranked team of players.
+	PlayerOrTeamId string `protobuf:"bytes,12,opt,name=player_or_team_id,json=playerOrTeamId,proto3" json:"player_or_team_id,omitempty"`
+	// LeagueName is the human readable, lore-tied name of the player's league. e.g. "Urgot's Maulers".
+	LeagueName string `protobuf:"bytes,13,opt,name=league_name,json=leagueName,proto3" json:"league_name,omitempty"`
+	// Tier is the tier name of the player's rank. i.e. BRONZE, SILVER, GOLD, PLATINUM, etc.
+	Tier string `protobuf:"bytes,14,opt,name=tier,proto3" json:"tier,omitempty"`
+	// LeaguePoints is the current number of points the player has in the ranked ladder.
+	LeaguePoints int64 `protobuf:"varint,15,opt,name=league_points,json=leaguePoints,proto3" json:"league_points,omitempty"`
+}
+
+func (m *PlayerRank_LeaguePosition) Reset()                    { *m = PlayerRank_LeaguePosition{} }
+func (m *PlayerRank_LeaguePosition) String() string            { return proto1.CompactTextString(m) }
+func (*PlayerRank_LeaguePosition) ProtoMessage()               {}
+func (*PlayerRank_LeaguePosition) Descriptor() ([]byte, []int) { return fileDescriptorApi, []int{2, 0} }
+
+func (m *PlayerRank_LeaguePosition) GetRank() string {
+	if m != nil {
+		return m.Rank
 	}
 	return ""
 }
 
-func (m *PlayerRankReq) GetPlayerName() string {
+func (m *PlayerRank_LeaguePosition) GetQueueType() string {
 	if m != nil {
-		return m.PlayerName
+		return m.QueueType
+	}
+	return ""
+}
+
+func (m *PlayerRank_LeaguePosition) GetHotStreak() bool {
+	if m != nil {
+		return m.HotStreak
+	}
+	return false
+}
+
+func (m *PlayerRank_LeaguePosition) GetMiniSeries() *PlayerRank_LeaguePosition_MiniSeries {
+	if m != nil {
+		return m.MiniSeries
+	}
+	return nil
+}
+
+func (m *PlayerRank_LeaguePosition) GetWins() int64 {
+	if m != nil {
+		return m.Wins
+	}
+	return 0
+}
+
+func (m *PlayerRank_LeaguePosition) GetVeteran() bool {
+	if m != nil {
+		return m.Veteran
+	}
+	return false
+}
+
+func (m *PlayerRank_LeaguePosition) GetLosses() int64 {
+	if m != nil {
+		return m.Losses
+	}
+	return 0
+}
+
+func (m *PlayerRank_LeaguePosition) GetFreshBlood() bool {
+	if m != nil {
+		return m.FreshBlood
+	}
+	return false
+}
+
+func (m *PlayerRank_LeaguePosition) GetLeagueId() string {
+	if m != nil {
+		return m.LeagueId
+	}
+	return ""
+}
+
+func (m *PlayerRank_LeaguePosition) GetPlayerOrTeamName() string {
+	if m != nil {
+		return m.PlayerOrTeamName
+	}
+	return ""
+}
+
+func (m *PlayerRank_LeaguePosition) GetInactive() bool {
+	if m != nil {
+		return m.Inactive
+	}
+	return false
+}
+
+func (m *PlayerRank_LeaguePosition) GetPlayerOrTeamId() string {
+	if m != nil {
+		return m.PlayerOrTeamId
+	}
+	return ""
+}
+
+func (m *PlayerRank_LeaguePosition) GetLeagueName() string {
+	if m != nil {
+		return m.LeagueName
+	}
+	return ""
+}
+
+func (m *PlayerRank_LeaguePosition) GetTier() string {
+	if m != nil {
+		return m.Tier
+	}
+	return ""
+}
+
+func (m *PlayerRank_LeaguePosition) GetLeaguePoints() int64 {
+	if m != nil {
+		return m.LeaguePoints
+	}
+	return 0
+}
+
+// MiniSeries is the data for a potential "promotion series" or any other sort of
+// important mini series.
+type PlayerRank_LeaguePosition_MiniSeries struct {
+	// Wins is the number of wins for the player in an ongoing mini series.
+	// If there isn't an ongoing mini series then this is 0.
+	Wins int64 `protobuf:"varint,1,opt,name=wins,proto3" json:"wins,omitempty"`
+	// Losses is the number of losses for the player in an ongoing mini series.
+	// If there isn't an ongoing mini series then this is 0.
+	Losses int64 `protobuf:"varint,2,opt,name=losses,proto3" json:"losses,omitempty"`
+	// Target is the target number of wins to succeed in the mini series.
+	// If there isn't an ongoing mini series then this is 0.
+	Target int64 `protobuf:"varint,3,opt,name=target,proto3" json:"target,omitempty"`
+	// Progress <Not sure myself...>
+	// If there isn't an ongoing mini series then this is an empty string.
+	Progress string `protobuf:"bytes,4,opt,name=progress,proto3" json:"progress,omitempty"`
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) Reset()         { *m = PlayerRank_LeaguePosition_MiniSeries{} }
+func (m *PlayerRank_LeaguePosition_MiniSeries) String() string { return proto1.CompactTextString(m) }
+func (*PlayerRank_LeaguePosition_MiniSeries) ProtoMessage()    {}
+func (*PlayerRank_LeaguePosition_MiniSeries) Descriptor() ([]byte, []int) {
+	return fileDescriptorApi, []int{2, 0, 0}
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) GetWins() int64 {
+	if m != nil {
+		return m.Wins
+	}
+	return 0
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) GetLosses() int64 {
+	if m != nil {
+		return m.Losses
+	}
+	return 0
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) GetTarget() int64 {
+	if m != nil {
+		return m.Target
+	}
+	return 0
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) GetProgress() string {
+	if m != nil {
+		return m.Progress
 	}
 	return ""
 }
 
 func init() {
-	proto1.RegisterType((*PlayerIDReq)(nil), "PlayerIDReq")
-	golang_proto.RegisterType((*PlayerIDReq)(nil), "PlayerIDReq")
+	proto1.RegisterType((*PlayerReq)(nil), "PlayerReq")
+	golang_proto.RegisterType((*PlayerReq)(nil), "PlayerReq")
 	proto1.RegisterType((*PlayerID)(nil), "PlayerID")
 	golang_proto.RegisterType((*PlayerID)(nil), "PlayerID")
-	proto1.RegisterType((*PlayerRankReq)(nil), "PlayerRankReq")
-	golang_proto.RegisterType((*PlayerRankReq)(nil), "PlayerRankReq")
+	proto1.RegisterType((*PlayerRank)(nil), "PlayerRank")
+	golang_proto.RegisterType((*PlayerRank)(nil), "PlayerRank")
+	proto1.RegisterType((*PlayerRank_LeaguePosition)(nil), "PlayerRank.LeaguePosition")
+	golang_proto.RegisterType((*PlayerRank_LeaguePosition)(nil), "PlayerRank.LeaguePosition")
+	proto1.RegisterType((*PlayerRank_LeaguePosition_MiniSeries)(nil), "PlayerRank.LeaguePosition.MiniSeries")
+	golang_proto.RegisterType((*PlayerRank_LeaguePosition_MiniSeries)(nil), "PlayerRank.LeaguePosition.MiniSeries")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -124,8 +325,12 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Riotgear service
 
 type RiotgearClient interface {
-	GetPlayerID(ctx context.Context, in *PlayerIDReq, opts ...grpc.CallOption) (*PlayerID, error)
-	GetPlayerRank(ctx context.Context, in *PlayerRankReq, opts ...grpc.CallOption) (*PlayerID, error)
+	// GetPlayerID returns the player ID when given the region and a player name.
+	// This is just an example use of Riot's League of Lengend's API.
+	GetPlayerID(ctx context.Context, in *PlayerReq, opts ...grpc.CallOption) (*PlayerID, error)
+	// GetPlayerRank returns the rank stats for all queue types for a given player name
+	// on a given region.
+	GetPlayerRank(ctx context.Context, in *PlayerReq, opts ...grpc.CallOption) (*PlayerRank, error)
 }
 
 type riotgearClient struct {
@@ -136,7 +341,7 @@ func NewRiotgearClient(cc *grpc.ClientConn) RiotgearClient {
 	return &riotgearClient{cc}
 }
 
-func (c *riotgearClient) GetPlayerID(ctx context.Context, in *PlayerIDReq, opts ...grpc.CallOption) (*PlayerID, error) {
+func (c *riotgearClient) GetPlayerID(ctx context.Context, in *PlayerReq, opts ...grpc.CallOption) (*PlayerID, error) {
 	out := new(PlayerID)
 	err := grpc.Invoke(ctx, "/Riotgear/GetPlayerID", in, out, c.cc, opts...)
 	if err != nil {
@@ -145,8 +350,8 @@ func (c *riotgearClient) GetPlayerID(ctx context.Context, in *PlayerIDReq, opts 
 	return out, nil
 }
 
-func (c *riotgearClient) GetPlayerRank(ctx context.Context, in *PlayerRankReq, opts ...grpc.CallOption) (*PlayerID, error) {
-	out := new(PlayerID)
+func (c *riotgearClient) GetPlayerRank(ctx context.Context, in *PlayerReq, opts ...grpc.CallOption) (*PlayerRank, error) {
+	out := new(PlayerRank)
 	err := grpc.Invoke(ctx, "/Riotgear/GetPlayerRank", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -157,8 +362,12 @@ func (c *riotgearClient) GetPlayerRank(ctx context.Context, in *PlayerRankReq, o
 // Server API for Riotgear service
 
 type RiotgearServer interface {
-	GetPlayerID(context.Context, *PlayerIDReq) (*PlayerID, error)
-	GetPlayerRank(context.Context, *PlayerRankReq) (*PlayerID, error)
+	// GetPlayerID returns the player ID when given the region and a player name.
+	// This is just an example use of Riot's League of Lengend's API.
+	GetPlayerID(context.Context, *PlayerReq) (*PlayerID, error)
+	// GetPlayerRank returns the rank stats for all queue types for a given player name
+	// on a given region.
+	GetPlayerRank(context.Context, *PlayerReq) (*PlayerRank, error)
 }
 
 func RegisterRiotgearServer(s *grpc.Server, srv RiotgearServer) {
@@ -166,7 +375,7 @@ func RegisterRiotgearServer(s *grpc.Server, srv RiotgearServer) {
 }
 
 func _Riotgear_GetPlayerID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerIDReq)
+	in := new(PlayerReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -178,13 +387,13 @@ func _Riotgear_GetPlayerID_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/Riotgear/GetPlayerID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RiotgearServer).GetPlayerID(ctx, req.(*PlayerIDReq))
+		return srv.(RiotgearServer).GetPlayerID(ctx, req.(*PlayerReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Riotgear_GetPlayerRank_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerRankReq)
+	in := new(PlayerReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -196,7 +405,7 @@ func _Riotgear_GetPlayerRank_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/Riotgear/GetPlayerRank",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RiotgearServer).GetPlayerRank(ctx, req.(*PlayerRankReq))
+		return srv.(RiotgearServer).GetPlayerRank(ctx, req.(*PlayerReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -218,7 +427,7 @@ var _Riotgear_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api.proto",
 }
 
-func (m *PlayerIDReq) Marshal() (dAtA []byte, err error) {
+func (m *PlayerReq) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -228,7 +437,7 @@ func (m *PlayerIDReq) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PlayerIDReq) MarshalTo(dAtA []byte) (int, error) {
+func (m *PlayerReq) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -271,7 +480,7 @@ func (m *PlayerID) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *PlayerRankReq) Marshal() (dAtA []byte, err error) {
+func (m *PlayerRank) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -281,22 +490,186 @@ func (m *PlayerRankReq) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PlayerRankReq) MarshalTo(dAtA []byte) (int, error) {
+func (m *PlayerRank) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.RegionName) > 0 {
+	if len(m.LeaguePositions) > 0 {
+		for _, msg := range m.LeaguePositions {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintApi(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *PlayerRank_LeaguePosition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PlayerRank_LeaguePosition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Rank) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintApi(dAtA, i, uint64(len(m.RegionName)))
-		i += copy(dAtA[i:], m.RegionName)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Rank)))
+		i += copy(dAtA[i:], m.Rank)
 	}
-	if len(m.PlayerName) > 0 {
+	if len(m.QueueType) > 0 {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintApi(dAtA, i, uint64(len(m.PlayerName)))
-		i += copy(dAtA[i:], m.PlayerName)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.QueueType)))
+		i += copy(dAtA[i:], m.QueueType)
+	}
+	if m.HotStreak {
+		dAtA[i] = 0x18
+		i++
+		if m.HotStreak {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.MiniSeries != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.MiniSeries.Size()))
+		n1, err := m.MiniSeries.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.Wins != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.Wins))
+	}
+	if m.Veteran {
+		dAtA[i] = 0x30
+		i++
+		if m.Veteran {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Losses != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.Losses))
+	}
+	if m.FreshBlood {
+		dAtA[i] = 0x40
+		i++
+		if m.FreshBlood {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.LeagueId) > 0 {
+		dAtA[i] = 0x4a
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(len(m.LeagueId)))
+		i += copy(dAtA[i:], m.LeagueId)
+	}
+	if len(m.PlayerOrTeamName) > 0 {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(len(m.PlayerOrTeamName)))
+		i += copy(dAtA[i:], m.PlayerOrTeamName)
+	}
+	if m.Inactive {
+		dAtA[i] = 0x58
+		i++
+		if m.Inactive {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.PlayerOrTeamId) > 0 {
+		dAtA[i] = 0x62
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(len(m.PlayerOrTeamId)))
+		i += copy(dAtA[i:], m.PlayerOrTeamId)
+	}
+	if len(m.LeagueName) > 0 {
+		dAtA[i] = 0x6a
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(len(m.LeagueName)))
+		i += copy(dAtA[i:], m.LeagueName)
+	}
+	if len(m.Tier) > 0 {
+		dAtA[i] = 0x72
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Tier)))
+		i += copy(dAtA[i:], m.Tier)
+	}
+	if m.LeaguePoints != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.LeaguePoints))
+	}
+	return i, nil
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Wins != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.Wins))
+	}
+	if m.Losses != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.Losses))
+	}
+	if m.Target != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(m.Target))
+	}
+	if len(m.Progress) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Progress)))
+		i += copy(dAtA[i:], m.Progress)
 	}
 	return i, nil
 }
@@ -310,7 +683,7 @@ func encodeVarintApi(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *PlayerIDReq) Size() (n int) {
+func (m *PlayerReq) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.RegionName)
@@ -333,14 +706,90 @@ func (m *PlayerID) Size() (n int) {
 	return n
 }
 
-func (m *PlayerRankReq) Size() (n int) {
+func (m *PlayerRank) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.RegionName)
+	if len(m.LeaguePositions) > 0 {
+		for _, e := range m.LeaguePositions {
+			l = e.Size()
+			n += 1 + l + sovApi(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PlayerRank_LeaguePosition) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Rank)
 	if l > 0 {
 		n += 1 + l + sovApi(uint64(l))
 	}
-	l = len(m.PlayerName)
+	l = len(m.QueueType)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.HotStreak {
+		n += 2
+	}
+	if m.MiniSeries != nil {
+		l = m.MiniSeries.Size()
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.Wins != 0 {
+		n += 1 + sovApi(uint64(m.Wins))
+	}
+	if m.Veteran {
+		n += 2
+	}
+	if m.Losses != 0 {
+		n += 1 + sovApi(uint64(m.Losses))
+	}
+	if m.FreshBlood {
+		n += 2
+	}
+	l = len(m.LeagueId)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.PlayerOrTeamName)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.Inactive {
+		n += 2
+	}
+	l = len(m.PlayerOrTeamId)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.LeagueName)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Tier)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.LeaguePoints != 0 {
+		n += 1 + sovApi(uint64(m.LeaguePoints))
+	}
+	return n
+}
+
+func (m *PlayerRank_LeaguePosition_MiniSeries) Size() (n int) {
+	var l int
+	_ = l
+	if m.Wins != 0 {
+		n += 1 + sovApi(uint64(m.Wins))
+	}
+	if m.Losses != 0 {
+		n += 1 + sovApi(uint64(m.Losses))
+	}
+	if m.Target != 0 {
+		n += 1 + sovApi(uint64(m.Target))
+	}
+	l = len(m.Progress)
 	if l > 0 {
 		n += 1 + l + sovApi(uint64(l))
 	}
@@ -360,7 +809,7 @@ func sovApi(x uint64) (n int) {
 func sozApi(x uint64) (n int) {
 	return sovApi(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *PlayerIDReq) Unmarshal(dAtA []byte) error {
+func (m *PlayerReq) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -383,10 +832,10 @@ func (m *PlayerIDReq) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PlayerIDReq: wiretype end group for non-group")
+			return fmt.Errorf("proto: PlayerReq: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PlayerIDReq: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PlayerReq: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -537,7 +986,7 @@ func (m *PlayerID) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PlayerRankReq) Unmarshal(dAtA []byte) error {
+func (m *PlayerRank) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -560,15 +1009,96 @@ func (m *PlayerRankReq) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PlayerRankReq: wiretype end group for non-group")
+			return fmt.Errorf("proto: PlayerRank: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PlayerRankReq: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PlayerRank: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RegionName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LeaguePositions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LeaguePositions = append(m.LeaguePositions, &PlayerRank_LeaguePosition{})
+			if err := m.LeaguePositions[len(m.LeaguePositions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PlayerRank_LeaguePosition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LeaguePosition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LeaguePosition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rank", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -593,11 +1123,11 @@ func (m *PlayerRankReq) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.RegionName = string(dAtA[iNdEx:postIndex])
+			m.Rank = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PlayerName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field QueueType", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -622,7 +1152,458 @@ func (m *PlayerRankReq) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PlayerName = string(dAtA[iNdEx:postIndex])
+			m.QueueType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HotStreak", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HotStreak = bool(v != 0)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MiniSeries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MiniSeries == nil {
+				m.MiniSeries = &PlayerRank_LeaguePosition_MiniSeries{}
+			}
+			if err := m.MiniSeries.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wins", wireType)
+			}
+			m.Wins = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Wins |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Veteran", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Veteran = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Losses", wireType)
+			}
+			m.Losses = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Losses |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FreshBlood", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.FreshBlood = bool(v != 0)
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LeagueId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LeagueId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlayerOrTeamName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlayerOrTeamName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Inactive", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Inactive = bool(v != 0)
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlayerOrTeamId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlayerOrTeamId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LeagueName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LeagueName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tier", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tier = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LeaguePoints", wireType)
+			}
+			m.LeaguePoints = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LeaguePoints |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PlayerRank_LeaguePosition_MiniSeries) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MiniSeries: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MiniSeries: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wins", wireType)
+			}
+			m.Wins = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Wins |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Losses", wireType)
+			}
+			m.Losses = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Losses |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Target", wireType)
+			}
+			m.Target = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Target |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Progress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Progress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -754,31 +1735,51 @@ func init() { proto1.RegisterFile("api.proto", fileDescriptorApi) }
 func init() { golang_proto.RegisterFile("api.proto", fileDescriptorApi) }
 
 var fileDescriptorApi = []byte{
-	// 411 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xc1, 0x8a, 0x13, 0x31,
-	0x18, 0xc7, 0x49, 0x8b, 0xd2, 0x49, 0xad, 0x87, 0x9c, 0x4a, 0x95, 0xb1, 0x8e, 0x07, 0x4b, 0x71,
-	0x26, 0x5a, 0xd1, 0x83, 0x17, 0x51, 0x04, 0x29, 0x82, 0xd6, 0xb9, 0x08, 0xa2, 0x48, 0x3a, 0x13,
-	0xd3, 0xd0, 0x4e, 0xbe, 0x31, 0x93, 0xb6, 0x48, 0xe9, 0x41, 0x1f, 0x41, 0x5f, 0x68, 0x6f, 0xbb,
-	0xc7, 0x85, 0x7d, 0x81, 0xa5, 0xbb, 0x0f, 0xb2, 0x34, 0x33, 0x1d, 0xa6, 0xec, 0xb2, 0xa7, 0x3d,
-	0x25, 0xdf, 0x97, 0x5f, 0xfe, 0xff, 0xfc, 0xc3, 0x87, 0x1d, 0x96, 0xca, 0x20, 0xd5, 0x60, 0xa0,
-	0xe3, 0x0b, 0x69, 0x26, 0xf3, 0x71, 0x10, 0x41, 0x42, 0x05, 0x08, 0xa0, 0xb6, 0x3d, 0x9e, 0xff,
-	0xb4, 0x95, 0x2d, 0xec, 0xae, 0xc0, 0x5f, 0x56, 0xf0, 0x64, 0x29, 0xcd, 0x14, 0x96, 0x54, 0x80,
-	0x6f, 0x0f, 0xfd, 0x05, 0x9b, 0xc9, 0x98, 0x19, 0xd0, 0x19, 0x2d, 0xb7, 0xc5, 0xbd, 0xfb, 0x02,
-	0x40, 0xcc, 0x38, 0x65, 0xa9, 0xa4, 0x4c, 0x29, 0x30, 0xcc, 0x48, 0x50, 0x59, 0x71, 0xfa, 0xc4,
-	0x2e, 0x91, 0x2f, 0xb8, 0xf2, 0xb3, 0x25, 0x13, 0x82, 0x6b, 0x0a, 0xa9, 0x25, 0x2e, 0xd3, 0xde,
-	0x27, 0xdc, 0x1c, 0xcd, 0xd8, 0x6f, 0xae, 0x87, 0xef, 0x42, 0xfe, 0x8b, 0x3c, 0xc0, 0x4d, 0xcd,
-	0x85, 0x04, 0xf5, 0x43, 0xb1, 0x84, 0xb7, 0x51, 0x17, 0xf5, 0x9c, 0x10, 0xe7, 0xad, 0x8f, 0x2c,
-	0xe1, 0x5b, 0x20, 0xb5, 0x7c, 0x0e, 0xd4, 0x72, 0x20, 0x6f, 0x6d, 0x01, 0xef, 0x31, 0x6e, 0xec,
-	0x04, 0xc9, 0x3d, 0xec, 0x14, 0xb0, 0x8c, 0xad, 0x56, 0x3d, 0x6c, 0xe4, 0x8d, 0x61, 0xec, 0x7d,
-	0xc6, 0xad, 0x1c, 0x0c, 0x99, 0x9a, 0xde, 0x88, 0xf7, 0xe0, 0x10, 0xe1, 0x46, 0x28, 0xc1, 0x08,
-	0xce, 0x34, 0xf9, 0x8e, 0x9b, 0xef, 0xb9, 0x29, 0xdf, 0x72, 0x27, 0xa8, 0xe4, 0xec, 0x38, 0x65,
-	0xe5, 0xbd, 0xf8, 0x7b, 0x72, 0xfe, 0xbf, 0x46, 0x89, 0x6f, 0xff, 0x73, 0xf1, 0x8c, 0xae, 0x2a,
-	0xaf, 0x58, 0xd3, 0x5c, 0x9e, 0xae, 0x2a, 0xce, 0x6b, 0x2a, 0x63, 0xf2, 0x0d, 0xb7, 0x4a, 0xf9,
-	0x6d, 0x02, 0x72, 0x37, 0xd8, 0x8b, 0x53, 0xb5, 0x78, 0x6a, 0x2d, 0xfa, 0xa4, 0x77, 0xb5, 0x85,
-	0x66, 0x6a, 0xba, 0x6f, 0xf0, 0xf6, 0x0f, 0xfa, 0xf7, 0xe6, 0x03, 0xb9, 0x35, 0xa8, 0x7f, 0x91,
-	0xa3, 0x3e, 0x42, 0xfa, 0x35, 0x6e, 0xef, 0x82, 0x75, 0x33, 0xae, 0x17, 0x32, 0xe2, 0xdd, 0x0c,
-	0xe6, 0x3a, 0xe2, 0x01, 0x79, 0x34, 0x31, 0x26, 0xcd, 0x5e, 0x51, 0x5a, 0x19, 0xa7, 0x09, 0xe7,
-	0x71, 0x06, 0x8a, 0xea, 0xe2, 0xd2, 0xd1, 0xc6, 0x45, 0xc7, 0x1b, 0x17, 0x9d, 0x6e, 0x5c, 0x74,
-	0x70, 0xe6, 0xa2, 0xaf, 0x0f, 0xaf, 0x81, 0x8b, 0xb1, 0xbd, 0x6d, 0x97, 0xe7, 0x17, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0xb3, 0x51, 0xfe, 0x9d, 0xe1, 0x02, 0x00, 0x00,
+	// 731 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0xcd, 0x6e, 0xfb, 0x44,
+	0x10, 0x97, 0x9b, 0x34, 0xff, 0x78, 0xd2, 0x2f, 0x16, 0xa9, 0xb2, 0x02, 0x04, 0x93, 0x0a, 0x11,
+	0x2a, 0x62, 0x43, 0x10, 0x1c, 0xb8, 0x51, 0x01, 0x55, 0x24, 0x0a, 0x95, 0x5b, 0x09, 0xa9, 0x1c,
+	0xa2, 0x6d, 0x3c, 0x75, 0x96, 0xd8, 0x5e, 0x77, 0x77, 0x93, 0xa8, 0xaa, 0x7a, 0xe1, 0xc6, 0x15,
+	0x5e, 0x08, 0xc1, 0x85, 0x23, 0x12, 0x2f, 0x80, 0x0a, 0x47, 0x1e, 0x02, 0x79, 0xec, 0xb8, 0x0e,
+	0x05, 0x4e, 0x3b, 0xf3, 0xdb, 0xdf, 0xce, 0xf7, 0x2c, 0xd8, 0x3c, 0x13, 0x5e, 0xa6, 0xa4, 0x91,
+	0xdd, 0x61, 0x24, 0xcc, 0x6c, 0x71, 0xed, 0x4d, 0x65, 0xe2, 0x47, 0x32, 0x92, 0x3e, 0xc1, 0xd7,
+	0x8b, 0x1b, 0xd2, 0x48, 0x21, 0xa9, 0xa4, 0x7f, 0x58, 0xa3, 0x27, 0x2b, 0x61, 0xe6, 0x72, 0xe5,
+	0x47, 0x72, 0x48, 0x97, 0xc3, 0x25, 0x8f, 0x45, 0xc8, 0x8d, 0x54, 0xda, 0xaf, 0xc4, 0xf2, 0xdd,
+	0xab, 0x91, 0x94, 0x51, 0x8c, 0x3e, 0xcf, 0x84, 0xcf, 0xd3, 0x54, 0x1a, 0x6e, 0x84, 0x4c, 0x75,
+	0x79, 0xfb, 0x0e, 0x1d, 0xd3, 0x61, 0x84, 0xe9, 0x50, 0xaf, 0x78, 0x14, 0xa1, 0xf2, 0x65, 0x46,
+	0x8c, 0xe7, 0xec, 0xfe, 0x19, 0xd8, 0xe7, 0x31, 0xbf, 0x43, 0x15, 0xe0, 0x2d, 0x7b, 0x1d, 0x3a,
+	0x0a, 0x23, 0x21, 0xd3, 0x49, 0xca, 0x13, 0x74, 0x2c, 0xd7, 0x1a, 0xd8, 0x01, 0x14, 0xd0, 0x17,
+	0x3c, 0xc1, 0x9c, 0x90, 0x11, 0xbb, 0x20, 0x6c, 0x15, 0x84, 0x02, 0xca, 0x09, 0xfd, 0xb7, 0xa0,
+	0x5d, 0x98, 0x1b, 0x7f, 0xc2, 0x5e, 0x01, 0xbb, 0x24, 0x8b, 0x90, 0x6c, 0x35, 0x82, 0x76, 0x01,
+	0x8c, 0xc3, 0xfe, 0x4f, 0xdb, 0x00, 0xa5, 0x63, 0x9e, 0xce, 0xd9, 0xa7, 0x70, 0x10, 0x23, 0x8f,
+	0x16, 0x38, 0xc9, 0xa4, 0x16, 0x14, 0xa0, 0x63, 0xb9, 0x8d, 0x41, 0x67, 0xd4, 0xf5, 0x9e, 0x68,
+	0xde, 0xe7, 0xc4, 0x39, 0x2f, 0x29, 0xc1, 0x7e, 0xbc, 0xa1, 0xeb, 0xee, 0x5f, 0x4d, 0xd8, 0xdb,
+	0xe4, 0x30, 0x06, 0x4d, 0xc5, 0xd3, 0x79, 0x99, 0x0c, 0xc9, 0xec, 0x35, 0x80, 0xdb, 0x05, 0x2e,
+	0x70, 0x62, 0xee, 0xb2, 0x75, 0x16, 0x36, 0x21, 0x97, 0x77, 0x19, 0xe6, 0xd7, 0x33, 0x69, 0x26,
+	0xda, 0x28, 0xe4, 0x73, 0xa7, 0xe1, 0x5a, 0x83, 0x76, 0x60, 0xcf, 0xa4, 0xb9, 0x20, 0x80, 0x7d,
+	0x06, 0x9d, 0x44, 0xa4, 0x62, 0xa2, 0x51, 0x09, 0xd4, 0x4e, 0xd3, 0xb5, 0x06, 0x9d, 0xd1, 0x9b,
+	0xff, 0x1d, 0xa6, 0x77, 0x26, 0x52, 0x71, 0x41, 0xe4, 0x00, 0x92, 0x4a, 0xce, 0x23, 0x5b, 0x89,
+	0x54, 0x3b, 0xdb, 0x54, 0x1a, 0x92, 0x99, 0x03, 0x2f, 0x96, 0x68, 0x50, 0xf1, 0xd4, 0x69, 0x91,
+	0xdf, 0xb5, 0xca, 0x0e, 0xa1, 0x15, 0x4b, 0xad, 0x51, 0x3b, 0x2f, 0x88, 0x5f, 0x6a, 0x79, 0x4b,
+	0x6e, 0x14, 0xea, 0xd9, 0xe4, 0x3a, 0x96, 0x32, 0x74, 0xda, 0xf4, 0x0a, 0x08, 0x3a, 0xc9, 0x91,
+	0xbc, 0x0d, 0x65, 0x69, 0x45, 0xe8, 0xd8, 0x94, 0x6b, 0xbb, 0x00, 0xc6, 0x21, 0x1b, 0xc2, 0xcb,
+	0x65, 0x8f, 0xa4, 0x9a, 0x18, 0xe4, 0x49, 0xd1, 0x58, 0x20, 0xda, 0x41, 0x71, 0xf5, 0xa5, 0xba,
+	0x44, 0x9e, 0x50, 0xff, 0xbb, 0xd0, 0x16, 0x29, 0x9f, 0x1a, 0xb1, 0x44, 0xa7, 0x43, 0x9e, 0x2a,
+	0x9d, 0xbd, 0x0d, 0x2f, 0xfd, 0xc3, 0x94, 0x08, 0x9d, 0x1d, 0x32, 0xb4, 0x57, 0x37, 0x34, 0x0e,
+	0xf3, 0x98, 0xcb, 0x90, 0xc8, 0xdb, 0x6e, 0x31, 0x46, 0x05, 0x44, 0x7e, 0x18, 0x34, 0x8d, 0x40,
+	0xe5, 0xec, 0x15, 0x4d, 0xcb, 0x65, 0x76, 0x04, 0xbb, 0xd5, 0x88, 0x88, 0xd4, 0x68, 0x67, 0x9f,
+	0xea, 0xb0, 0xb3, 0x9e, 0x81, 0x1c, 0xeb, 0xc6, 0x00, 0x67, 0xcf, 0x2b, 0x6c, 0xd5, 0x2a, 0xfc,
+	0x54, 0xc7, 0xad, 0x8d, 0x3a, 0x1e, 0x42, 0xcb, 0x70, 0x15, 0xa1, 0xa1, 0x86, 0x37, 0x82, 0x52,
+	0xcb, 0x53, 0xce, 0x94, 0x8c, 0x14, 0xea, 0xa2, 0xd5, 0x76, 0x50, 0xe9, 0xa3, 0x9f, 0x2d, 0x68,
+	0x07, 0x42, 0x9a, 0x08, 0xb9, 0x62, 0x5f, 0x43, 0xe7, 0x14, 0x4d, 0x35, 0xfd, 0xe0, 0x55, 0x7b,
+	0xd5, 0xb5, 0xbd, 0x35, 0xdc, 0xff, 0xe0, 0xdb, 0xdf, 0xfe, 0xfc, 0x61, 0xcb, 0x67, 0x43, 0xda,
+	0xde, 0xe5, 0x7b, 0xfe, 0x7d, 0x6d, 0xe3, 0x1e, 0xfc, 0xa2, 0x50, 0xfe, 0x7d, 0x6d, 0xcb, 0x1e,
+	0x7c, 0x11, 0xb2, 0x2b, 0xd8, 0xad, 0x8c, 0xd3, 0xc2, 0xd4, 0xcd, 0x77, 0x6a, 0xb3, 0xd7, 0x7f,
+	0x97, 0x1c, 0x1c, 0xb3, 0xc1, 0xbf, 0x3b, 0xc8, 0xe7, 0x7f, 0xd3, 0xfc, 0xc9, 0x77, 0xd6, 0xf7,
+	0x1f, 0x5f, 0xb0, 0xed, 0x51, 0xe3, 0x2b, 0x71, 0x7e, 0x6c, 0x59, 0xea, 0x14, 0xdc, 0x75, 0x52,
+	0xae, 0x46, 0xb5, 0x14, 0x53, 0x74, 0x4f, 0xe9, 0xa7, 0x72, 0x33, 0x25, 0xbf, 0xc1, 0xa9, 0xf1,
+	0xd8, 0xd1, 0xcc, 0x98, 0x4c, 0x7f, 0xe4, 0xfb, 0xb5, 0x2f, 0x6c, 0x86, 0x18, 0x6a, 0x99, 0xfa,
+	0xaa, 0x7c, 0xfc, 0xcb, 0x63, 0xcf, 0xfa, 0xf5, 0xb1, 0x67, 0xfd, 0xfe, 0xd8, 0xb3, 0x7e, 0xfc,
+	0xa3, 0x67, 0x5d, 0xbd, 0xf1, 0x3f, 0xe4, 0xf2, 0xab, 0x6c, 0xd1, 0xf1, 0xfe, 0xdf, 0x01, 0x00,
+	0x00, 0xff, 0xff, 0x2c, 0x91, 0x52, 0x17, 0x55, 0x05, 0x00, 0x00,
 }

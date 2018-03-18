@@ -31,6 +31,7 @@ func getGRPCError(err error) error {
 	}
 }
 
+// Server is the Riotgear server struct.
 type Server struct {
 	logger *logrus.Logger
 
@@ -42,6 +43,8 @@ type Server struct {
 	nameRegexp *regexp.Regexp
 }
 
+// NewServer returns a new Riotgear server that utilises the given API key on
+// the many region server URLs to satisfy queries.
 func NewServer(logger *logrus.Logger, client *http.Client, regionToServerURL map[string]*url.URL, riotAPIKey string) *Server {
 	return &Server{
 		logger:            logger,
@@ -96,7 +99,9 @@ func (s *Server) getPlayerData(serverURL *url.URL, playerName string) (*gear.Pla
 	return &data, nil
 }
 
-func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*proto.PlayerID, error) {
+// GetPlayerID returns the player ID when given the region and a player name.
+// This is just an example use of Riot's League of Lengend's API.
+func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerReq) (*proto.PlayerID, error) {
 	serverURL, err := s.getServerURL(pbReq.GetRegionName())
 	if err != nil {
 		return nil, getGRPCError(err)
@@ -107,14 +112,16 @@ func (s *Server) GetPlayerID(ctx context.Context, pbReq *proto.PlayerIDReq) (*pr
 		return nil, getGRPCError(err)
 	}
 
-	s.logger.Infof("Request for %s on %s. Player ID %d.", playerData.Name, strings.ToUpper(pbReq.GetRegionName()), int(playerData.ID))
+	s.logger.Infof("Request for %s on %s. Player ID %d.", playerData.Name, strings.ToUpper(pbReq.GetRegionName()), playerData.ID)
 
 	return &proto.PlayerID{
 		PlayerId: int64(playerData.ID),
 	}, nil
 }
 
-func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) (*proto.PlayerID, error) {
+// GetPlayerRank returns the rank stats for all queue types for a given player name
+// on a given region.
+func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerReq) (*proto.PlayerRank, error) {
 	serverURL, err := s.getServerURL(pbReq.GetRegionName())
 	if err != nil {
 		return nil, getGRPCError(err)
@@ -125,9 +132,9 @@ func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) 
 		return nil, getGRPCError(err)
 	}
 
-	s.logger.Infof("Request for %s on %s. Player ID %d.", playerData.Name, strings.ToUpper(pbReq.GetRegionName()), int(playerData.ID))
+	s.logger.Infof("Request for %s on %s. Player ID %d.", playerData.Name, strings.ToUpper(pbReq.GetRegionName()), playerData.ID)
 
-	rel := &url.URL{Path: fmt.Sprintf("/lol/league/v3/positions/by-summoner/%d", int(playerData.ID))}
+	rel := &url.URL{Path: fmt.Sprintf("/lol/league/v3/positions/by-summoner/%d", playerData.ID)}
 
 	u := serverURL.ResolveReference(rel)
 
@@ -145,11 +152,10 @@ func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, getGRPCError(shield.Errorf(shield.Internal, "%s. Player ID %d", resp.Status, int(playerData.ID)))
+		return nil, getGRPCError(shield.Errorf(shield.Internal, "%s. Player ID %d", resp.Status, playerData.ID))
 	}
 
-	//var rankData gear.RankData
-	var data []gear.LeaguePositionData
+	var data gear.RankData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
 		return nil, getGRPCError(shield.Wrap(shield.Internal, err))
@@ -157,7 +163,36 @@ func (s *Server) GetPlayerRank(ctx context.Context, pbReq *proto.PlayerRankReq) 
 
 	s.logger.Infof("%#v", data)
 
-	return &proto.PlayerID{
-		PlayerId: int64(playerData.ID),
-	}, nil
+	pbResp := &proto.PlayerRank{
+		LeaguePositions: make([]*proto.PlayerRank_LeaguePosition, 0, len(data)),
+	}
+
+	for _, lp := range data {
+		leaguePosition := &proto.PlayerRank_LeaguePosition{
+			Rank:      lp.Rank,
+			QueueType: lp.QueueType,
+			HotStreak: lp.HotStreak,
+			MiniSeries: &proto.PlayerRank_LeaguePosition_MiniSeries{
+				Wins:     int64(lp.MiniSeries.Wins),
+				Losses:   int64(lp.MiniSeries.Losses),
+				Target:   int64(lp.MiniSeries.Target),
+				Progress: lp.MiniSeries.Progress,
+			},
+			Wins:             int64(lp.Wins),
+			Veteran:          lp.Veteran,
+			Losses:           int64(lp.Losses),
+			FreshBlood:       lp.FreshBlood,
+			LeagueId:         lp.LeagueID,
+			PlayerOrTeamName: lp.PlayerOrTeamName,
+			Inactive:         lp.Inactive,
+			PlayerOrTeamId:   lp.PlayerOrTeamID,
+			LeagueName:       lp.LeagueName,
+			Tier:             lp.Tier,
+			LeaguePoints:     int64(lp.LeaguePoints),
+		}
+
+		pbResp.LeaguePositions = append(pbResp.LeaguePositions, leaguePosition)
+	}
+
+	return pbResp, nil
 }
