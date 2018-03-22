@@ -1,0 +1,15 @@
+Gnorm template layout
+=====================
+
+Project: Gnorm Postgres-go
+URL: https://github.com/gnormal/postgres-go
+Revision: 82aafe7a530827c6cdf9cb0575d5b5aadc6c4850
+License: MIT License
+
+Used and modified files
+-----------------------
+
+- templates/fields.gotmpl
+- templates/store.gotmpl
+- templates/table.gotmpl
+
