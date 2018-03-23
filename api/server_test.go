@@ -2,18 +2,22 @@ package api_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/ory/dockertest"
 	"github.com/sirupsen/logrus"
 
 	"github.com/heedson/riotgear/api"
+	"github.com/heedson/riotgear/armoury/conn"
 	"github.com/heedson/riotgear/gear"
 	"github.com/heedson/riotgear/proto"
 )
@@ -178,6 +182,17 @@ func TestGetPlayerRank(t *testing.T) {
 		FullTimestamp:   true,
 	}
 
+	db, err := setupDB(logger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		err = teardownDB(db)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+
 	mockRiotServer := httptest.NewServer(newMockRiotHandler("myapikey"))
 	defer mockRiotServer.Close()
 
@@ -192,7 +207,23 @@ func TestGetPlayerRank(t *testing.T) {
 		"test": mockURL,
 	}
 
-	s := api.NewServer(logger, mockClient, mockRegionsToMockURLs, "myapikey")
+	schemaSource, err := os.Open("./../armoury/sqlfiles/schema.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer schemaSource.Close()
+
+	s, err := api.NewServer(
+		logger,
+		db,
+		schemaSource,
+		mockClient,
+		mockRegionsToMockURLs,
+		"myapikey",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for name, player := range testPlayers {
 		t.Run(name, func(t *testing.T) {
@@ -209,4 +240,60 @@ func TestGetPlayerRank(t *testing.T) {
 			}
 		})
 	}
+}
+
+var (
+	pool     *dockertest.Pool
+	resource *dockertest.Resource
+)
+
+func setupDB(logger *logrus.Logger) (*sql.DB, error) {
+	var err error
+	pool, err = dockertest.NewPool("")
+	if err != nil {
+		return nil, err
+	}
+
+	dbName := "postgres"
+	dbUser := "myuser"
+	dbPass := "mypass"
+	resource, err = pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Repository: "postgres",
+			Tag:        "10.0",
+			Env: []string{
+				"POSTGRES_DB=" + dbName,
+				"POSTGRES_USER=" + dbUser,
+				"POSTGRES_PASSWORD=" + dbPass,
+			},
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	psqlURL := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(dbUser, dbPass),
+		Host:     resource.Container.NetworkSettings.IPAddress,
+		Path:     dbName,
+		RawQuery: "sslmode=disable",
+	}
+
+	return conn.New(logger, psqlURL)
+}
+
+func teardownDB(db *sql.DB) error {
+	if db != nil {
+		err := db.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	if resource != nil {
+		return pool.Purge(resource)
+	}
+
+	return nil
 }

@@ -7,15 +7,18 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/pkg/errors"
 	"github.com/rakyll/statik/fs"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	"github.com/heedson/riotgear/api"
+	"github.com/heedson/riotgear/armoury/conn"
 	"github.com/heedson/riotgear/proto"
 	_ "github.com/heedson/riotgear/statik"
 )
@@ -46,10 +49,32 @@ func serveOpenAPI(mux *http.ServeMux) error {
 	return nil
 }
 
+type psqlURL url.URL
+
+func (p *psqlURL) Decode(in string) error {
+	u, err := url.Parse(in)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if u.Scheme != "postgres" && u.Scheme != "postgresql" {
+		return errors.New(`schema should be "postgres" or "postgresql"`)
+	}
+
+	*p = psqlURL(*u)
+	return nil
+}
+
+func (p *psqlURL) URL() url.URL {
+	return (url.URL)(*p)
+}
+
 type config struct {
-	RiotAPIKey  string `required:"true" envconfig:"RIOT_API_KEY" desc:"The Riot API key to use for access to the Riot API."`
-	GRPCAddr    string `default:"localhost:8081" envconfig:"GRPC_ADDR" desc:"Address to serve the gRPC Server on."`
-	GatewayAddr string `default:"0.0.0.0:8080" split_words:"true" desc:"Address to serve the gRPC-Gateway on."`
+	RiotAPIKey   string  `required:"true" envconfig:"RIOT_API_KEY" desc:"The Riot API key to use for access to the Riot API."`
+	DBURL        psqlURL `required:"true" envconfig:"DB_URL" desc:"URL of PostgreSQL DB"`
+	SchemaSource string  `default: "/schema.sql" split_words:"true" desc:"The file path to the schema source file."`
+	GRPCAddr     string  `default:"localhost:8081" envconfig:"GRPC_ADDR" desc:"Address to serve the gRPC Server on."`
+	GatewayAddr  string  `default:"0.0.0.0:8080" split_words:"true" desc:"Address to serve the gRPC-Gateway on."`
 }
 
 func main() {
@@ -64,6 +89,11 @@ func main() {
 	var envOpts config
 	if err := envconfig.Process("", &envOpts); err != nil {
 		envconfig.Usage("", &envOpts)
+		logger.WithError(err).Fatal()
+	}
+
+	db, err := conn.New(logger, envOpts.DBURL.URL())
+	if err != nil {
 		logger.WithError(err).Fatal()
 	}
 
@@ -82,17 +112,32 @@ func main() {
 		"pbe":  mustParseURL("pbe1"),
 	}
 
-	s := grpc.NewServer()
+	schemaFile, err := os.Open(envOpts.SchemaSource)
+	if err != nil {
+		logger.WithError(err).Fatal()
+	}
 
-	srv := api.NewServer(
+	srv, err := api.NewServer(
 		logger,
+		db,
+		schemaFile,
 		&http.Client{
 			Timeout: time.Second * 10,
 		},
 		regionsToServerURL,
 		envOpts.RiotAPIKey,
 	)
+	if err != nil {
+		_ = schemaFile.Close()
+		logger.WithError(err).Fatal()
+	}
 
+	err = schemaFile.Close()
+	if err != nil {
+		logger.WithError(err).Fatal()
+	}
+
+	s := grpc.NewServer()
 	proto.RegisterRiotgearServer(s, srv)
 
 	go func() {

@@ -2,13 +2,17 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,6 +38,7 @@ func getGRPCError(err error) error {
 // Server is the Riotgear server struct.
 type Server struct {
 	logger *logrus.Logger
+	db     *sql.DB
 
 	regionToServerURL map[string]*url.URL
 
@@ -45,14 +50,49 @@ type Server struct {
 
 // NewServer returns a new Riotgear server that utilises the given API key on
 // the many region server URLs to satisfy queries.
-func NewServer(logger *logrus.Logger, client *http.Client, regionToServerURL map[string]*url.URL, riotAPIKey string) *Server {
-	return &Server{
+func NewServer(logger *logrus.Logger, db *sql.DB, schemaSource io.Reader, client *http.Client, regionToServerURL map[string]*url.URL, riotAPIKey string) (*Server, error) {
+	if db == nil {
+		return nil, errors.New("DB cannot be nil")
+	}
+
+	s := &Server{
 		logger:            logger,
+		db:                db,
 		regionToServerURL: regionToServerURL,
 		riotAPIKey:        riotAPIKey,
 		httpClient:        client,
 		nameRegexp:        regexp.MustCompile(`^[0-9\p{L} _.]+$`),
 	}
+
+	if err := s.buildSchema(schemaSource); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return s, nil
+}
+
+func (s *Server) buildSchema(schemaSource io.Reader) error {
+	schema, err := ioutil.ReadAll(schemaSource)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	commands := strings.Split(string(schema), ";")
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer tx.Rollback()
+
+	for _, cmd := range commands {
+		_, err = tx.Exec(cmd)
+		if err != nil {
+			return err
+		}
+	}
+
+	return errors.WithStack(tx.Commit())
 }
 
 func (s *Server) getServerURL(regionName string) (*url.URL, error) {
