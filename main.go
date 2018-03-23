@@ -72,7 +72,7 @@ func (p *psqlURL) URL() url.URL {
 type config struct {
 	RiotAPIKey   string  `required:"true" envconfig:"RIOT_API_KEY" desc:"The Riot API key to use for access to the Riot API."`
 	DBURL        psqlURL `required:"true" envconfig:"DB_URL" desc:"URL of PostgreSQL DB"`
-	SchemaSource string  `default: "/schema.sql" split_words:"true" desc:"The file path to the schema source file."`
+	SchemaSource string  `default:"schema.sql" split_words:"true" desc:"The file path to the schema source file."`
 	GRPCAddr     string  `default:"localhost:8081" envconfig:"GRPC_ADDR" desc:"Address to serve the gRPC Server on."`
 	GatewayAddr  string  `default:"0.0.0.0:8080" split_words:"true" desc:"Address to serve the gRPC-Gateway on."`
 }
@@ -114,7 +114,7 @@ func main() {
 
 	schemaFile, err := os.Open(envOpts.SchemaSource)
 	if err != nil {
-		logger.WithError(err).Fatal()
+		logger.WithError(err).Fatalf("Failed to open %q", envOpts.SchemaSource)
 	}
 
 	srv, err := api.NewServer(
