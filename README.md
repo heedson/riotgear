@@ -4,14 +4,14 @@ Utilisation of the Riot Game's League of Legend's API.
 ## basic usage
 To run the service locally, it requires a PostgreSQL database to also be running.
 ```
-$ docker run -d --rm --name riotgear-db -e POSTGRES_PASSWORD=mysecretpassword postgres
-```
-To then build and run the Riotgear server:
-```
 $ make install
 $ make generate
+
 $ docker build -t riotgear .
-$ docker run -d --rm --link riotgear-db --name riotgear -p 8080:8080 -e RIOT_API_KEY=myapikey -e DB_URL=postgres://postgres:mysecretpassword@riotgear-db:5432 riotgear
+
+$ docker network create riotgearnetwork
+$ docker run -d --rm --name riotgear-db -p 5432:5432 --network riotgearnetwork -e POSTGRES_PASSWORD=mysecretpassword postgres
+$ docker run -d --rm --name riotgear -p 8080:8080 --network riotgearnetwork -e RIOT_API_KEY=myapikey -e DB_URL=postgres://postgres:mysecretpassword@riotgear-db:5432/postgres riotgear
 ```
 To get a response from the current Riotgear server, head to:
 ```
