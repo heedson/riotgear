@@ -3,11 +3,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9e41cacf52aa0caf599d88092383396524142278d20b656db42b90e6d2ed555b"
   name = "github.com/gogo/googleapis"
   packages = ["google/api"]
+  pruneopts = "UT"
   revision = "0cd9801be74a10d5ac39d69626eac8255ffcd502"
 
 [[projects]]
+  digest = "1:9200feaa21def2af6569be06bed80353df18271698af300595996be569527c8c"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -34,19 +37,23 @@
     "protoc-gen-gogo/grpc",
     "protoc-gen-gogo/plugin",
     "vanity",
-    "vanity/command"
+    "vanity/command",
   ]
+  pruneopts = "UT"
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:e2b86e41f3d669fc36b50d31d32d22c8ac656c75aa5ea89717ce7177e134ff2a"
   name = "github.com/golang/glog"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
   branch = "master"
+  digest = "1:bf1d3fabf732fbd9b973da1a81dad4b297d5fac46133a8faffb9debb4fa7213e"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -58,11 +65,13 @@
     "ptypes/any",
     "ptypes/duration",
     "ptypes/struct",
-    "ptypes/timestamp"
+    "ptypes/timestamp",
   ]
+  pruneopts = "NUT"
   revision = "bbd03ef6da3a115852eaf24c8a1c46aeb39aa175"
 
 [[projects]]
+  digest = "1:c4a4b6fd271a199f35c41c4e4537de1ac5e68c14e3b5cb2ada42caa4c436c7a7"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "protoc-gen-grpc-gateway",
@@ -75,56 +84,70 @@
     "protoc-gen-swagger/options",
     "runtime",
     "runtime/internal",
-    "utilities"
+    "utilities",
   ]
+  pruneopts = "UT"
   revision = "07f5e79768022f9a3265235f0db4ac8c3f675fec"
   version = "v1.3.1"
 
 [[projects]]
+  digest = "1:b8870bf2606dca65dc382f4cb8b7a434f17ff36a915451bda12788e9620be368"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "f611eb38b3875cc3bd991ca91c51d06446afa14c"
   version = "v1.3.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:ab854798aeafc4ddb63d2225a500192c0505690ce46ee22c4aa450c1d1637a5c"
   name = "github.com/mwitkow/go-proto-validators"
   packages = [
     ".",
     "plugin",
-    "protoc-gen-govalidators"
+    "protoc-gen-govalidators",
   ]
+  pruneopts = "UT"
   revision = "a55ca57f374a8846924b030f534d8b8211508cf0"
 
 [[projects]]
+  digest = "1:5cf3f025cbee5951a4ee961de067c8a89fc95a5adabead774f82822efabab121"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:5d7c02dff880d46874e55f5393a6f968e80bbbb49acff043eb5a73e768dbd7e4"
   name = "github.com/rakyll/statik"
   packages = [
     ".",
-    "fs"
+    "fs",
   ]
+  pruneopts = "NUT"
   revision = "fd36b3595eb2ec8da4b8153b107f7ea08504899d"
   version = "v0.1.1"
 
 [[projects]]
+  digest = "1:6201742366c1518fc5f0df9ccdb4d193fc8a2aef2cc57bf164c9bca23bd5f869"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
+  pruneopts = "NUT"
   revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
   version = "v1.0.4"
 
 [[projects]]
   branch = "master"
+  digest = "1:38cb27d3525635c34e84e2dbc2207c37d10832776997665bf0ddaeae2c861f1f"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
+  pruneopts = "NUT"
   revision = "432090b8f568c018896cd8a0fb0345872bbac6ce"
 
 [[projects]]
   branch = "master"
+  digest = "1:0744fec18e9083ec13cb19d8df60841b66a5caa0226171dc83d113969daa2968"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -133,21 +156,25 @@
     "idna",
     "internal/timeseries",
     "lex/httplex",
-    "trace"
+    "trace",
   ]
+  pruneopts = "NUT"
   revision = "cbe0f9307d0156177f9dd5dc85da1a31abc5f2fb"
 
 [[projects]]
   branch = "master"
+  digest = "1:4301a4973691694236c322c1ed32273b7d42dbff3cd2d0bbb7b06f233edfbd8e"
   name = "golang.org/x/sys"
   packages = [
     "unix",
-    "windows"
+    "windows",
   ]
+  pruneopts = "NUT"
   revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
 
 [[projects]]
   branch = "master"
+  digest = "1:e7071ed636b5422cc51c0e3a6cebc229d6c9fffc528814b519a980641422d619"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -163,20 +190,24 @@
     "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
-    "unicode/rangetable"
+    "unicode/rangetable",
   ]
+  pruneopts = "NUT"
   revision = "4e4a3210bb54bb31f6ab2cdca2edcc0b50c420c1"
 
 [[projects]]
   branch = "master"
+  digest = "1:c2dee8dbcc504d1a7858f5dbaed7c8b256c512c5e9e81480158c30185bbd2792"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
-    "googleapis/rpc/status"
+    "googleapis/rpc/status",
   ]
+  pruneopts = "NUT"
   revision = "2b5a72b8730b0b16380010cfe5286c42108d88e7"
 
 [[projects]]
+  digest = "1:6134b1973a1161ed8b4183bcac7135566211a165db9f81f501d69c0747d73cbd"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -201,14 +232,38 @@
     "stats",
     "status",
     "tap",
-    "transport"
+    "transport",
   ]
+  pruneopts = "NUT"
   revision = "8e4536a86ab602859c20df5ebfd0bd4228d08655"
   version = "v1.10.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d20c272f36978a1bcaf07aa1de423a64681957dbe2a58e7a1a3021761ae69271"
+  input-imports = [
+    "github.com/gogo/googleapis/google/api",
+    "github.com/gogo/protobuf/gogoproto",
+    "github.com/gogo/protobuf/proto",
+    "github.com/gogo/protobuf/protoc-gen-gogo",
+    "github.com/golang/protobuf/proto",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options",
+    "github.com/grpc-ecosystem/grpc-gateway/runtime",
+    "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/kelseyhightower/envconfig",
+    "github.com/mwitkow/go-proto-validators",
+    "github.com/mwitkow/go-proto-validators/protoc-gen-govalidators",
+    "github.com/pkg/errors",
+    "github.com/rakyll/statik",
+    "github.com/rakyll/statik/fs",
+    "github.com/sirupsen/logrus",
+    "golang.org/x/net/context",
+    "google.golang.org/grpc",
+    "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/grpclog",
+    "google.golang.org/grpc/status",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

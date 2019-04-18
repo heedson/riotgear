@@ -25,21 +25,21 @@ generate:
 		-I vendor/github.com/gogo/googleapis/ \
 		-I vendor/ \
 		--gogo_out=plugins=grpc,\
-Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
-Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
-$$GOPATH/src/ \
+	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
+	$$GOPATH/src/ \
 		--grpc-gateway_out=\
-Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
-Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
-$$GOPATH/src/ \
+	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
+	$$GOPATH/src/ \
 		--swagger_out=third_party/OpenAPI/ \
 		--govalidators_out=gogoimport=true,\
-Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
-Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
-$$GOPATH/src \
+	Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
+	Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api:\
+	$$GOPATH/src \
 		proto/api.proto
 
 	# Workaround for https://github.com/grpc-ecosystem/grpc-gateway/issues/229.
