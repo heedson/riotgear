@@ -57,18 +57,23 @@ import (
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
-	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
-	"github.com/mwitkow/go-proto-validators"
+	validator "github.com/mwitkow/go-proto-validators"
 )
+
+const uuidPattern = "^([a-fA-F0-9]{8}-" +
+	"[a-fA-F0-9]{4}-" +
+	"[%s][a-fA-F0-9]{3}-" +
+	"[8|9|aA|bB][a-fA-F0-9]{3}-" +
+	"[a-fA-F0-9]{12})?$"
 
 type plugin struct {
 	*generator.Generator
 	generator.PluginImports
 	regexPkg      generator.Single
 	fmtPkg        generator.Single
-	protoPkg      generator.Single
 	validatorPkg  generator.Single
 	useGogoImport bool
 }
@@ -104,7 +109,6 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		} else {
 			p.generateProto2Message(file, msg)
 		}
-
 	}
 }
 
@@ -113,6 +117,16 @@ func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.F
 		v, err := proto.GetExtension(field.Options, validator.E_Field)
 		if err == nil && v.(*validator.FieldValidator) != nil {
 			return (v.(*validator.FieldValidator))
+		}
+	}
+	return nil
+}
+
+func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.OneofValidator {
+	if oneof.Options != nil {
+		v, err := proto.GetExtension(oneof.Options, validator.E_Oneof)
+		if err == nil && v.(*validator.OneofValidator) != nil {
+			return (v.(*validator.OneofValidator))
 		}
 	}
 	return nil
@@ -146,9 +160,21 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
-		if validator != nil && validator.Regex != nil {
-			fieldName := p.GetFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, strconv.Quote(*validator.Regex), `)`)
+		if validator != nil {
+			fieldName := p.GetOneOfFieldName(message, field)
+			if validator.Regex != nil && validator.UuidVer != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: regex and uuid validator is set for field %v.%v, only one of them can be set. Regex and UUID validator is ignored for this field.", ccTypeName, fieldName)
+			} else if validator.UuidVer != nil {
+				uuid, err := getUUIDRegex(validator.UuidVer)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v error %s.\n", ccTypeName, fieldName, err)
+				} else {
+					validator.Regex = &uuid
+					p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
+				}
+			} else if validator.Regex != nil {
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
+			}
 		}
 	}
 }
@@ -202,9 +228,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if field.IsEnum() {
+			p.generateEnumValidator(field, variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if (field.IsBytes()) {
+		} else if field.IsBytes() {
 			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if repeated && nullable {
@@ -238,6 +266,21 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
+
+	for _, oneof := range message.OneofDecl {
+		oneofValidator := getOneofValidatorIfAny(oneof)
+		if oneofValidator == nil {
+			continue
+		}
+		if oneofValidator.GetRequired() {
+			oneOfName := generator.CamelCase(oneof.GetName())
+			p.P(`if this.Get` + oneOfName + `() == nil {`)
+			p.In()
+			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, oneOfName, `",`, p.fmtPkg.Use(), `.Errorf("one of the fields must be set"))`)
+			p.Out()
+			p.P(`}`)
+		}
+	}
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
@@ -280,9 +323,11 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if field.IsEnum() {
+			p.generateEnumValidator(field, variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if (field.IsBytes()) {
+		} else if field.IsBytes() {
 			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if p.validatorWithMessageExists(fieldValidator) {
@@ -350,11 +395,25 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 	}
 }
 
+func (p *plugin) generateEnumValidator(
+	field *descriptor.FieldDescriptorProto,
+	variableName, ccTypeName, fieldName string,
+	fv *validator.FieldValidator) {
+	if fv.GetIsInEnum() {
+		enum := p.ObjectNamed(field.GetTypeName()).(*generator.EnumDescriptor)
+		p.P(`if _, ok := `, strings.Join(enum.TypeName(), "_"), "_name[int32(", variableName, ")]; !ok {")
+		p.In()
+		p.generateErrorString(variableName, fieldName, fmt.Sprintf("be a valid %s field", strings.Join(enum.TypeName(), "_")), fv)
+		p.Out()
+		p.P(`}`)
+	}
+}
+
 func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.LengthGt != nil {
 		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`length be greater than '%d'`, fv.GetLengthGt())
+		errorStr := fmt.Sprintf(`have a length greater than '%d'`, fv.GetLengthGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -363,7 +422,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthLt != nil {
 		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`length be less than '%d'`, fv.GetLengthLt())
+		errorStr := fmt.Sprintf(`have a length smaller than '%d'`, fv.GetLengthLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -372,12 +431,11 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthEq != nil {
 		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`length be not equal '%d'`, fv.GetLengthEq())
+		errorStr := fmt.Sprintf(`have a length equal to '%d'`, fv.GetLengthEq())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
-
 }
 
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
@@ -460,8 +518,32 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 	}
 }
 
+// getUUIDRegex returns a regex to validate that a string is in UUID
+// format. The version parameter specified the UUID version. If version is 0,
+// the returned regex is valid for any UUID version
+func getUUIDRegex(version *int32) (string, error) {
+	if version == nil {
+		return "", nil
+	} else if *version < 0 || *version > 5 {
+		return "", fmt.Errorf("UUID version should be between 0-5, Got %d", *version)
+	} else if *version == 0 {
+		return fmt.Sprintf(uuidPattern, "1-5"), nil
+	} else {
+		return fmt.Sprintf(uuidPattern, strconv.Itoa(int(*version))), nil
+	}
+}
+
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Regex != nil {
+	if fv.Regex != nil || fv.UuidVer != nil {
+		if fv.UuidVer != nil {
+			uuid, err := getUUIDRegex(fv.UuidVer)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v error %s.\n", ccTypeName, fieldName, err)
+			} else {
+				fv.Regex = &uuid
+			}
+		}
+
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
 		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())
@@ -478,7 +560,6 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 		p.P(`}`)
 	}
 	p.generateLengthValidator(variableName, ccTypeName, fieldName, fv)
-
 }
 
 func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
@@ -511,7 +592,6 @@ func (p *plugin) generateErrorString(variableName string, fieldName string, spec
 	} else {
 		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
 	}
-
 }
 
 func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
@@ -552,21 +632,6 @@ func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *gener
 	return msg.GetOptions().GetMapEntry()
 }
 
-func (p *plugin) validatorWithAnyConstraint(fv *validator.FieldValidator) bool {
-	if fv == nil {
-		return false
-	}
-
-	// Need to use reflection in order to be future-proof for new types of constraints.
-	v := reflect.ValueOf(fv)
-	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Interface() != nil {
-			return true
-		}
-	}
-	return false
-}
-
 func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
 	return fv != nil && fv.MsgExists != nil && *(fv.MsgExists)
 }
@@ -579,7 +644,17 @@ func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator
 	// Need to use reflection in order to be future-proof for new types of constraints.
 	v := reflect.ValueOf(*fv)
 	for i := 0; i < v.NumField(); i++ {
-		if v.Type().Field(i).Name != "RepeatedCountMin" && v.Type().Field(i).Name != "RepeatedCountMax" && v.Field(i).Pointer() != 0 {
+		fieldName := v.Type().Field(i).Name
+
+		// All known validators will have a pointer type and we should skip any fields
+		// that are not pointers (i.e unknown fields, etc) as well as 'nil' pointers that
+		// don't lead to anything.
+		if v.Type().Field(i).Type.Kind() != reflect.Ptr || v.Field(i).IsNil() {
+			continue
+		}
+
+		// Identify non-repeated constraints based on their name.
+		if fieldName != "RepeatedCountMin" && fieldName != "RepeatedCountMax" {
 			return true
 		}
 	}
